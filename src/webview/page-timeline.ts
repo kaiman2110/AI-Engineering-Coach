@@ -8,6 +8,7 @@
 import { DateFilter } from '../core/types';
 import { rpc, el, formatDate, formatTime } from './shared';
 import { html, render } from './render';
+import { t } from './i18n/index';
 
 /* ── Gantt timeline types ── */
 interface TlSession {
@@ -84,7 +85,7 @@ let sessionsSearch = '';
 
 export async function renderTimeline(container: HTMLElement, currentFilter: DateFilter): Promise<void> {
   render(html`
-    <h1>Timeline</h1>
+    <h1>${t('timeline.title')}</h1>
     <div id="timeline-tab-content"></div>
   `, container);
 

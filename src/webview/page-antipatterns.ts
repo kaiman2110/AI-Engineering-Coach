@@ -8,6 +8,7 @@
 import { DateFilter, PracticeGroup, PRACTICE_GROUPS } from '../core/types';
 import type { RuleSource } from '../core/types/rule-types';
 import { rpc, el, COLORS, scoreColor, scoreLabel } from './shared';
+import { t } from './i18n/index';
 import { html, render, type ComponentChildren, ScoreRing, PctBadge } from './render';
 import { consumeNavHint } from './app';
 import { renderCoverageHeatmap } from './page-antipatterns-heatmap';
@@ -241,13 +242,13 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
 
   render(html`<div>
     <div class="ap-page-header">
-      <h1>Anti-Patterns</h1>
+      <h1>${t('antipatterns.title')}</h1>
       <p class="ap-page-intro">Review health scores across practice groups, drill into individual findings, and manage the rules that detect them. Switch to the <strong>Rules</strong> tab to browse, create, or edit detection rules using the built-in DSL.</p>
     </div>
 
     <div class="ap-tab-bar">
-      <button class="ap-tab active" data-tab="antipatterns">Anti-Patterns <span class="ap-tab-badge">${patterns.length}</span></button>
-      <button class="ap-tab" data-tab="rules">Rules <span class="ap-tab-badge">${rules.length}</span></button>
+      <button class="ap-tab active" data-tab="antipatterns">${t('antipatterns.title')} <span class="ap-tab-badge">${patterns.length}</span></button>
+      <button class="ap-tab" data-tab="rules">${t('antipatterns.rulesTab')} <span class="ap-tab-badge">${rules.length}</span></button>
     </div>
 
     <!-- Tab: Anti-Patterns -->

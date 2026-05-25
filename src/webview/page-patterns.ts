@@ -8,6 +8,7 @@
 import { DateFilter, CalendarActivityData, ProjectOverviewData } from '../core/types';
 import { rpc, createChart, formatNum, escapeHtml, el, COLORS, $$ } from './shared';
 import { html, render, CanvasEl, VNode } from './render';
+import { t } from './i18n/index';
 
 interface WlbData {
   score: number;
@@ -83,7 +84,7 @@ export async function renderPatterns(container: HTMLElement, currentFilter: Date
   }
 
   render(html`
-    <h1>Activity Patterns</h1>
+    <h1>${t('patterns.title')}</h1>
 
     <div class="cons-range-bar" id="patternsRange">
       <button class=${`cons-range-btn${activeRangeDays === 7 ? ' active' : ''}`} data-range="7">Last 7 days</button>
@@ -94,9 +95,9 @@ export async function renderPatterns(container: HTMLElement, currentFilter: Date
     </div>
 
     <div class="pattern-tabs" id="patternTabs">
-      <button class=${`pattern-tab${activePatternTab === 'hours' ? ' active' : ''}`} data-tab="hours">Work Hours</button>
-      <button class=${`pattern-tab${activePatternTab === 'calendar' ? ' active' : ''}`} data-tab="calendar">Calendar</button>
-      <button class=${`pattern-tab${activePatternTab === 'projects' ? ' active' : ''}`} data-tab="projects">Projects</button>
+      <button class=${`pattern-tab${activePatternTab === 'hours' ? ' active' : ''}`} data-tab="hours">${t('patterns.workHours')}</button>
+      <button class=${`pattern-tab${activePatternTab === 'calendar' ? ' active' : ''}`} data-tab="calendar">${t('patterns.calendar')}</button>
+      <button class=${`pattern-tab${activePatternTab === 'projects' ? ' active' : ''}`} data-tab="projects">${t('patterns.projects')}</button>
     </div>
 
     <div id="tabHours" class=${`pattern-tab-panel${activePatternTab === 'hours' ? ' active' : ''}`}></div>
