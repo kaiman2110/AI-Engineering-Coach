@@ -10,7 +10,7 @@ import { FF_TOKEN_REPORTING_ENABLED } from '../core/constants';
 import { rpc, rpcAllSettled, createChart, formatNum, COLORS, PALETTE, harnessColor, destroyChartById, scoreColor, scoreLabel } from './shared';
 import { html, render, CanvasEl, ScoreRing, PctBadge } from './render';
 import { setSkillCache, getSkillCache } from './skill-cache';
-import { t } from './i18n/index';
+import { t, tGroupName } from './i18n/index';
 
 // Module-level view state — survives filter/harness changes.
 let activeMetric = 'requests';
@@ -64,7 +64,7 @@ function prettyDashboardLanguage(label: string): string {
 
 function PracticeCard({ g }: { g: GroupScore }) {
   const color = scoreColor(g.score);
-  const name = PRACTICE_GROUPS[g.group];
+  const name = tGroupName(g.group, PRACTICE_GROUPS[g.group]);
   return html`
     <a href="#" data-page="anti-patterns" data-nav-hint=${g.group} class="ap-score-card" style="text-decoration:none;color:inherit;cursor:pointer;">
       <div class="ap-score-card-top">

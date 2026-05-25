@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { t, getLocale, setLocale, resolveLocale } from './index';
+import { t, getLocale, setLocale, resolveLocale, tRuleName, tGroupName, tGroupDesc } from './index';
 import { en } from './en';
 import { ja } from './ja';
 
@@ -71,5 +71,45 @@ describe('resolveLocale', () => {
     expect(resolveLocale('fr')).toBe('en');
     expect(resolveLocale('zh-CN')).toBe('en');
     expect(resolveLocale('')).toBe('en');
+  });
+});
+
+describe('tRuleName', () => {
+  beforeEach(() => {
+    setLocale('en');
+  });
+
+  it('returns fallback in English locale', () => {
+    expect(tRuleName('lazy-prompting', 'Lazy Prompting')).toBe('Lazy Prompting');
+  });
+
+  it('returns Japanese translation in ja locale', () => {
+    setLocale('ja');
+    expect(tRuleName('lazy-prompting', 'Lazy Prompting')).toBe('手抜きプロンプト');
+  });
+
+  it('returns fallback for unknown rule in ja locale', () => {
+    setLocale('ja');
+    expect(tRuleName('unknown-rule', 'My Custom Rule')).toBe('My Custom Rule');
+  });
+});
+
+describe('tGroupName / tGroupDesc', () => {
+  beforeEach(() => {
+    setLocale('en');
+  });
+
+  it('returns fallback in English locale', () => {
+    expect(tGroupName('prompt-quality', 'Prompt Quality')).toBe('Prompt Quality');
+  });
+
+  it('returns Japanese group name', () => {
+    setLocale('ja');
+    expect(tGroupName('prompt-quality', 'Prompt Quality')).toBe('プロンプト品質');
+  });
+
+  it('returns Japanese group description', () => {
+    setLocale('ja');
+    expect(tGroupDesc('code-review', 'fallback')).toContain('レビュー');
   });
 });
