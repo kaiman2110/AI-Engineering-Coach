@@ -10,6 +10,7 @@ import { TOKEN_DATA_AVAILABLE_FROM } from '../core/constants';
 import { rpc, COLORS, Chart, trackChart, destroyCharts } from './shared';
 import { html, render, StatCard, ComponentChildren } from './render';
 import { renderContextManagement } from './page-context-mgmt';
+import { t } from './i18n/index';
 
 /* Harness colors */
 const HC: Record<string, string> = { 'Local Agent': '#007acc', 'Local Agent (Insiders)': '#24bfa5', 'Xcode': '#147efb', 'Claude Code': '#d97706', 'GitHub Copilot CLI': '#8b5cf6', 'Codex CLI': '#ec4899', 'OpenCode': '#10b981' };
@@ -39,13 +40,15 @@ const activeRangeDays: Record<'config-quality' | 'context-mgmt', number> = {
   'context-mgmt': 30,
 };
 
-const ALL_RANGES: { days: number; label: string }[] = [
-  { days: 30, label: 'Last 1 month' },
-  { days: 90, label: 'Last 3 months' },
-  { days: 180, label: 'Last 6 months' },
-  { days: 365, label: 'Last 12 months' },
-  { days: 0, label: 'All time' },
-];
+function getAllRanges(): { days: number; label: string }[] {
+  return [
+    { days: 30, label: t('configHealth.range1m') },
+    { days: 90, label: t('configHealth.range3m') },
+    { days: 180, label: t('configHealth.range6m') },
+    { days: 365, label: t('configHealth.range12m') },
+    { days: 0, label: t('configHealth.rangeAll') },
+  ];
+}
 
 export async function renderConfigHealth(container: HTMLElement, currentFilter: DateFilter): Promise<void> {
   // Helpers for the TOKEN_DATA_AVAILABLE_FROM cutoff. Both sub-tabs (Context
@@ -80,8 +83,8 @@ export async function renderConfigHealth(container: HTMLElement, currentFilter: 
   // For context-mgmt, fetch availability so we can hide buttons that would
   // yield no extra token data. Refresh on every render so reindexed data
   // is reflected immediately.
-  let visibleRanges = ALL_RANGES;
-  let emptyRangeMessage = 'No token-bearing context data available.';
+  let visibleRanges = getAllRanges();
+  let emptyRangeMessage = t('configHealth.noTokenData');
   if (activeSubTab === 'context-mgmt') {
     try {
       const avail = await rpc<{
@@ -94,7 +97,7 @@ export async function renderConfigHealth(container: HTMLElement, currentFilter: 
         { filter: { ...currentFilter, fromDate: undefined, toDate: undefined } } as Record<string, unknown>,
       );
       const allowed = new Set(avail.rangesWithTokens);
-      visibleRanges = ALL_RANGES.filter(r => allowed.has(r.days));
+      visibleRanges = getAllRanges().filter(r => allowed.has(r.days));
       // If the current range is no longer available, snap to the nearest
       // broader range that IS available (or the only available range, if
       // we have to widen significantly).
@@ -110,14 +113,14 @@ export async function renderConfigHealth(container: HTMLElement, currentFilter: 
       if (visibleRanges.length === 0) {
         if (avail.matchingSessions === 0) {
           emptyRangeMessage = currentFilter.harness
-            ? `No sessions found for ${currentFilter.harness}.`
-            : 'No sessions match the current filter.';
+            ? t('configHealth.noSessionsFor').replace('{0}', currentFilter.harness)
+            : t('configHealth.noSessionsMatch');
         } else if (avail.sessionsWithRequestTokens === 0 && avail.harnessesWithoutRequestTokens.length > 0) {
           // Sessions exist, but none have per-request token data.
           const harnesses = avail.harnessesWithoutRequestTokens.join(', ');
-          emptyRangeMessage = `${harnesses} only emits session-aggregated tokens, not per-request — Context Management requires per-request data to chart utilization. Try a different harness, or view consumption in the Output tab.`;
+          emptyRangeMessage = t('configHealth.noPerRequestData').replace('{0}', harnesses);
         } else {
-          emptyRangeMessage = 'No token-bearing context data available.';
+          emptyRangeMessage = t('configHealth.noTokenData');
         }
       }
     } catch {
@@ -159,8 +162,8 @@ export async function renderConfigHealth(container: HTMLElement, currentFilter: 
 
   render(html`
     <div style=${tabBarStyle}>
-      <button id="ctxSubTabConfig" class="ctx-sub-tab" data-tab="config-quality" style=${tabStyle(activeSubTab === 'config-quality')}>Context Quality</button>
-      <button id="ctxSubTabMgmt" class="ctx-sub-tab" data-tab="context-mgmt" style=${tabStyle(activeSubTab === 'context-mgmt')}>Context Management</button>
+      <button id="ctxSubTabConfig" class="ctx-sub-tab" data-tab="config-quality" style=${tabStyle(activeSubTab === 'config-quality')}>${t('configHealth.contextQuality')}</button>
+      <button id="ctxSubTabMgmt" class="ctx-sub-tab" data-tab="context-mgmt" style=${tabStyle(activeSubTab === 'context-mgmt')}>${t('configHealth.contextManagement')}</button>
     </div>
     <div class="cons-range-bar" id="ctxRangeBar" style="margin-top:12px;display:flex;align-items:center;gap:0;flex-wrap:wrap;">
       ${rangeButtons}
@@ -220,35 +223,35 @@ async function renderConfigQuality(container: HTMLElement, currentFilter: DateFi
 
   render(html`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-      <h2 style="margin:0;">Context Health</h2>
+      <h2 style="margin:0;">${t('configHealth.title')}</h2>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <select id="ctxHarnessFilter" style="padding:4px 8px;border-radius:6px;background:var(--card-bg, #161b22);border:1px solid var(--border-color, #30363d);color:var(--text-primary, #c9d1d9);font-size:12px;">
-          <option value="">All Harnesses</option>
+          <option value="">${t('configHealth.allHarnesses')}</option>
           ${harnesses.map(h => html`<option value=${h} selected=${currentFilter.harness === h || undefined}>${h}</option>`)}
         </select>
-        <button id="ctxReviewBtn" style="padding:5px 14px;border-radius:6px;background:var(--accent-blue);color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:opacity 0.15s;" title="AI reviews your context files and scores them">Review Context Files</button>
-        <select id="ctxReviewCount" style="padding:4px 6px;border-radius:6px;background:var(--card-bg, #161b22);border:1px solid var(--border-color, #30363d);color:var(--text-primary, #c9d1d9);font-size:12px;" title="Number of workspaces to review">
-          <option value="3">Top 3</option>
-          <option value="5" selected>Top 5</option>
-          <option value="10">Top 10</option>
-          <option value="15">Top 15</option>
+        <button id="ctxReviewBtn" style="padding:5px 14px;border-radius:6px;background:var(--accent-blue);color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:opacity 0.15s;">${t('configHealth.reviewBtn')}</button>
+        <select id="ctxReviewCount" style="padding:4px 6px;border-radius:6px;background:var(--card-bg, #161b22);border:1px solid var(--border-color, #30363d);color:var(--text-primary, #c9d1d9);font-size:12px;">
+          <option value="3">${t('configHealth.top3')}</option>
+          <option value="5" selected>${t('configHealth.top5')}</option>
+          <option value="10">${t('configHealth.top10')}</option>
+          <option value="15">${t('configHealth.top15')}</option>
         </select>
       </div>
     </div>
     <div class="stat-grid">
-      <${StatCard} label="Overall Score" value=${data.overallScore + '/100'} accent=${overallColor} />
-      <${StatCard} label="Agentic Readiness" value=${ar.score + '/100'} accent=${arColor} />
-      <${StatCard} label="Active Workspaces" value=${String(wsCount)} accent=${COLORS.blue} />
-      <${StatCard} label="With Context Files" value=${`${withInstructions}/${wsCount}`} accent=${withInstructions === wsCount && wsCount > 0 ? COLORS.green : COLORS.yellow} />
+      <${StatCard} label=${t('configHealth.overallScore')} value=${data.overallScore + '/100'} accent=${overallColor} />
+      <${StatCard} label=${t('configHealth.agenticReadiness')} value=${ar.score + '/100'} accent=${arColor} />
+      <${StatCard} label=${t('configHealth.activeWorkspaces')} value=${String(wsCount)} accent=${COLORS.blue} />
+      <${StatCard} label=${t('configHealth.withContextFiles')} value=${`${withInstructions}/${wsCount}`} accent=${withInstructions === wsCount && wsCount > 0 ? COLORS.green : COLORS.yellow} />
     </div>
     ${renderAgenticReadiness(ar)}
     ${renderContextProvision(data.contextProvisionByHarness)}
     <div id="ctxReviewResults"></div>
-    <h3 style="margin-top:24px;">Workspace Context Map</h3>
-    <p style="color:var(--text-muted);font-size:12px;margin:4px 0 12px;">Size = request volume. Color = instruction quality score. <b>Click a tile</b> for details & suggestions.</p>
+    <h3 style="margin-top:24px;">${t('configHealth.wsContextMap')}</h3>
+    <p style="color:var(--text-muted);font-size:12px;margin:4px 0 12px;">${t('configHealth.wsContextMapDesc')}</p>
     <div id="ctxTreemapWrap" style="min-height:200px;position:relative;"><canvas id="ctxTreemapCanvas" height="350"></canvas></div>
     <div id="ctxTileDetail" style="display:none;"></div>
-    ${wsCount === 0 ? html`<div style="text-align:center;padding:40px 20px;color:var(--text-muted);"><div style="font-size:18px;margin-bottom:8px;">No active workspaces found</div><div>Requires workspaces with 50+ requests in the selected timeframe.</div></div>` : null}`, container);
+    ${wsCount === 0 ? html`<div style="text-align:center;padding:40px 20px;color:var(--text-muted);"><div style="font-size:18px;margin-bottom:8px;">${t('configHealth.noActiveWs')}</div><div>${t('configHealth.noActiveWsDesc')}</div></div>` : null}`, container);
 
   if (data.workspaces.length > 0) renderTreemap(data.workspaces, container);
 
@@ -297,8 +300,8 @@ function renderAgenticReadiness(ar: AgenticReadinessScore): ComponentChildren {
   const present = ar.signals.filter(s => s.present).length;
   const total = ar.signals.length;
   return html`
-    <h3 style="margin-top:24px;">Agentic Readiness</h3>
-    <p style="color:var(--text-muted);font-size:12px;margin:4px 0 8px;">${present}/${total} signals detected. Are your projects ready for AI agents?</p>
+    <h3 style="margin-top:24px;">${t('configHealth.agenticReadiness')}</h3>
+    <p style="color:var(--text-muted);font-size:12px;margin:4px 0 8px;">${t('configHealth.agenticDesc').replace('{0}', String(present)).replace('{1}', String(total))}</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin:8px 0 16px;">
       ${ar.signals.map(s => {
         const ic = s.present ? COLORS.green : COLORS.red;
@@ -319,21 +322,25 @@ function renderAgenticReadiness(ar: AgenticReadinessScore): ComponentChildren {
 
 /* ── Context Review (AI Agent Flow) ───────────────────────────────── */
 
-const CATEGORY_LABELS: Record<string, string> = {
-  clarity: 'Clarity', specificity: 'Specificity', structure: 'Structure',
-  completeness: 'Completeness', staleness: 'Staleness', redundancy: 'Redundancy',
-  actionability: 'Actionability',
-};
+function getCategoryLabels(): Record<string, string> {
+  return {
+    clarity: t('configHealth.catClarity'), specificity: t('configHealth.catSpecificity'), structure: t('configHealth.catStructure'),
+    completeness: t('configHealth.catCompleteness'), staleness: t('configHealth.catStaleness'), redundancy: t('configHealth.catRedundancy'),
+    actionability: t('configHealth.catActionability'),
+  };
+}
 
-const CATEGORY_TOOLTIPS: Record<string, string> = {
-  clarity: 'How easy it is for the AI to understand your instructions without ambiguity.',
-  specificity: 'How precisely your instructions target concrete behaviors, tools, or patterns.',
-  structure: 'How well-organized your instructions are with headings, lists, and logical sections.',
-  completeness: 'How thoroughly your instructions cover the necessary topics and edge cases.',
-  staleness: 'Whether your instructions are up-to-date and free of outdated references.',
-  redundancy: 'How free your instructions are from duplicate or overlapping content.',
-  actionability: 'How directly the AI can act on your instructions without needing clarification.',
-};
+function getCategoryTooltips(): Record<string, string> {
+  return {
+    clarity: t('configHealth.tipClarity'),
+    specificity: t('configHealth.tipSpecificity'),
+    structure: t('configHealth.tipStructure'),
+    completeness: t('configHealth.tipCompleteness'),
+    staleness: t('configHealth.tipStaleness'),
+    redundancy: t('configHealth.tipRedundancy'),
+    actionability: t('configHealth.tipActionability'),
+  };
+}
 
 const GRADE_COLORS: Record<string, string> = {
   A: COLORS.green, B: '#58a6ff', C: COLORS.yellow, D: COLORS.orange, F: COLORS.red,
@@ -344,7 +351,7 @@ async function runContextReview(workspaces: WorkspaceConfigHealth[]): Promise<vo
   const countSelect = document.getElementById('ctxReviewCount') as HTMLSelectElement | null;
   const resultsEl = document.getElementById('ctxReviewResults');
   if (!resultsEl) return;
-  if (btn) { btn.disabled = true; btn.textContent = 'Reviewing...'; btn.style.opacity = '0.6'; }
+  if (btn) { btn.disabled = true; btn.textContent = t('configHealth.reviewing'); btn.style.opacity = '0.6'; }
 
   const reviewCount = countSelect ? Number.parseInt(countSelect.value, 10) : 5;
   const toReview = workspaces.slice(0, reviewCount);
@@ -363,8 +370,8 @@ async function runContextReview(workspaces: WorkspaceConfigHealth[]): Promise<vo
     <div style="margin:20px 0;padding:24px;border-radius:8px;background:var(--card-bg, #161b22);border:1px solid var(--border-color, #30363d);display:flex;align-items:center;gap:12px;">
       <div class="loading-spinner" style="width:20px;height:20px;border-width:2px;flex-shrink:0;"></div>
       <div>
-        <div style="font-size:14px;font-weight:600;color:var(--text-primary, #c9d1d9);">Reviewing context files\u2026</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Analyzing ${toReview.length} workspace${toReview.length > 1 ? 's' : ''}</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text-primary, #c9d1d9);">${t('configHealth.reviewBtn')}\u2026</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">${t('configHealth.analyzingWs').replace('{0}', String(toReview.length))}</div>
       </div>
     </div>`, resultsEl);
 
@@ -372,17 +379,17 @@ async function runContextReview(workspaces: WorkspaceConfigHealth[]): Promise<vo
     const result = await rpc<{ reviews?: ContextReviewResult[]; error?: string }>('reviewContextFiles', { workspaceIds: wsIds, count: reviewCount } as Record<string, unknown>);
 
     if (result.error) {
-      render(html`<div style="margin:16px 0;padding:12px 16px;border-radius:6px;border-left:3px solid ${COLORS.red};background:rgba(248,81,73,0.06);font-size:13px;color:${COLORS.red};">Review failed: ${result.error}</div>`, resultsEl);
+      render(html`<div style="margin:16px 0;padding:12px 16px;border-radius:6px;border-left:3px solid ${COLORS.red};background:rgba(248,81,73,0.06);font-size:13px;color:${COLORS.red};">${t('configHealth.reviewFailed').replace('{0}', result.error!)}</div>`, resultsEl);
       return;
     }
     const reviews = result.reviews || [];
     if (reviews.length === 0) {
-      render(html`<div style="margin:16px 0;padding:12px;text-align:center;color:var(--text-muted);font-size:13px;">No review results returned.</div>`, resultsEl);
+      render(html`<div style="margin:16px 0;padding:12px;text-align:center;color:var(--text-muted);font-size:13px;">${t('configHealth.noReviewResults')}</div>`, resultsEl);
       return;
     }
     render(html`
-      <h3 style="margin-top:24px;">Context File Review</h3>
-      <p style="color:var(--text-muted);font-size:12px;margin:4px 0 12px;">AI-powered review of your instruction files across ${reviews.length} workspace(s).</p>
+      <h3 style="margin-top:24px;">${t('configHealth.reviewTitle')}</h3>
+      <p style="color:var(--text-muted);font-size:12px;margin:4px 0 12px;">${t('configHealth.reviewDesc').replace('{0}', String(reviews.length))}</p>
       ${reviews.map(r => renderReviewCard(r))}`, resultsEl);
     // Collapse/expand
     for (const el of resultsEl.querySelectorAll('.ctx-review-header')) {
@@ -405,7 +412,7 @@ async function runContextReview(workspaces: WorkspaceConfigHealth[]): Promise<vo
       if (ds._origBg) { ds.backgroundColor = ds._origBg; delete ds._origBg; }
       activeTreemapChart.update('none');
     }
-    if (btn) { btn.disabled = false; btn.textContent = 'Review Context Files'; btn.style.opacity = '1'; }
+    if (btn) { btn.disabled = false; btn.textContent = t('configHealth.reviewBtn'); btn.style.opacity = '1'; }
   }
 }
 
@@ -425,14 +432,14 @@ function renderReviewCard(review: ContextReviewResult): ComponentChildren {
           <span style="font-size:24px;font-weight:800;color:${gc};line-height:1;">${review.overallGrade}</span>
           <div>
             <div style="font-weight:600;font-size:14px;">${review.workspaceName}</div>
-            <div style="font-size:11px;color:var(--text-muted);">${review.overallScore}/100 \u2014 ${goodCount} good, ${warnCount} warnings, ${critCount} critical</div>
+            <div style="font-size:11px;color:var(--text-muted);">${review.overallScore}/100 \u2014 ${t('configHealth.reviewSummary').replace('{0}', String(goodCount)).replace('{1}', String(warnCount)).replace('{2}', String(critCount))}</div>
           </div>
         </div>
         <div style="display:flex;gap:4px;flex-shrink:0;">
           ${cats.map(([cat, score]) => {
             const c = score >= 45 ? COLORS.green : score >= 25 ? COLORS.yellow : COLORS.red;
-            const tip = CATEGORY_TOOLTIPS[cat] || '';
-            return html`<div style="text-align:center;min-width:42px;" data-tip=${tip || undefined} tabindex=${tip ? 0 : undefined} aria-label=${tip || undefined}><div style="font-size:12px;font-weight:700;color:${c};">${score}</div><div style="font-size:8px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;">${(CATEGORY_LABELS[cat] || cat).slice(0, 5)}</div></div>`;
+            const tip = getCategoryTooltips()[cat] || '';
+            return html`<div style="text-align:center;min-width:42px;" data-tip=${tip || undefined} tabindex=${tip ? 0 : undefined} aria-label=${tip || undefined}><div style="font-size:12px;font-weight:700;color:${c};">${score}</div><div style="font-size:8px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;">${(getCategoryLabels()[cat] || cat).slice(0, 5)}</div></div>`;
           })}
         </div>
       </div>
@@ -440,7 +447,7 @@ function renderReviewCard(review: ContextReviewResult): ComponentChildren {
         <div style="padding:10px 0 8px;font-size:12px;color:var(--text-muted);line-height:1.5;font-style:italic;">${review.summary}</div>
         ${renderCategoryBars(cats)}
         <div style="margin-top:12px;">
-          <div style="font-weight:600;font-size:13px;margin-bottom:8px;">Findings</div>
+          <div style="font-weight:600;font-size:13px;margin-bottom:8px;">${t('configHealth.findings')}</div>
           ${findings.map(f => renderFinding(f))}
         </div>
       </div>
@@ -449,7 +456,7 @@ function renderReviewCard(review: ContextReviewResult): ComponentChildren {
 
 function renderCategoryBars(cats: [string, number][]): ComponentChildren {
   return html`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 4px;">
-    ${cats.map(([cat, score]) => sBar(CATEGORY_LABELS[cat] || cat, score, CATEGORY_TOOLTIPS[cat]))}
+    ${cats.map(([cat, score]) => sBar(getCategoryLabels()[cat] || cat, score, getCategoryTooltips()[cat]))}
   </div>`;
 }
 
@@ -457,7 +464,7 @@ function renderFinding(f: ContextReviewFinding): ComponentChildren {
   const sevIcon = f.severity === 'good' ? html`<span style="color:${COLORS.green};">${'\u2713'}</span>`
     : f.severity === 'critical' ? html`<span style="color:${COLORS.red};">${'\u2717'}</span>`
     : html`<span style="color:${COLORS.yellow};">${'\u26A0'}</span>`;
-  const catLabel = CATEGORY_LABELS[f.category] || f.category;
+  const catLabel = getCategoryLabels()[f.category] || f.category;
   const bg = f.severity === 'good' ? 'rgba(63,185,80,0.05)' : f.severity === 'critical' ? 'rgba(248,81,73,0.06)' : 'rgba(210,153,34,0.06)';
   return html`
     <div style="padding:8px 10px;margin:4px 0;border-radius:6px;background:${bg};font-size:12px;">
@@ -587,14 +594,14 @@ function renderTreemap(workspaces: WorkspaceConfigHealth[], container: HTMLEleme
               const d = ctx.raw?._data;
               if (!d) return '';
               return [
-                `Harness: ${d.harness}`,
-                `Requests: ${d.requests.toLocaleString()} / Sessions: ${d.sessions}`,
-                `Context Score: ${d.score}/100 / Quality: ${d.qualityScore}/100`,
-                `Config Files: ${d.files}${d.badges.length > 0 ? ` (${d.badges.join(', ')})` : ''}`,
-                `Last Active: ${d.lastActivity}`,
-                d.stale ? (d.staleDays != null ? `Stale context (${d.staleDays} days)` : 'No context files') : '',
+                `${t('configHealth.treemapHarness')} ${d.harness}`,
+                `${t('configHealth.requests')}: ${d.requests.toLocaleString()} / ${t('contextMgmt.sessions')}: ${d.sessions}`,
+                `${t('configHealth.treemapContextScore')} ${d.score}/100 / ${t('configHealth.treemapQuality')} ${d.qualityScore}/100`,
+                `${t('configHealth.treemapConfigFiles')} ${d.files}${d.badges.length > 0 ? ` (${d.badges.join(', ')})` : ''}`,
+                `${t('configHealth.treemapLastActive')} ${d.lastActivity}`,
+                d.stale ? (d.staleDays != null ? t('configHealth.treemapStale').replace('{0}', String(d.staleDays)) : t('configHealth.treemapNoContext')) : '',
                 '',
-                'Click for details & suggestions',
+                t('configHealth.clickForDetails'),
               ].filter(Boolean);
             },
           },
@@ -619,8 +626,8 @@ function showTileDetail(ws: WorkspaceConfigHealth, container: HTMLElement): void
   if (ws.hasAgents) badges.push(bdg('Agents', COLORS.cyan));
   if (ws.hasSkills) badges.push(bdg('Skills', COLORS.green));
   if (ws.hasHooks) badges.push(bdg('Hooks', COLORS.orange));
-  if (ws.staleContext) badges.push(bdg(ws.staleDays != null ? `Stale (${ws.staleDays}d)` : 'No context', COLORS.red));
-  if (badges.length === 0) badges.push(bdg('No config files', COLORS.muted));
+  if (ws.staleContext) badges.push(bdg(ws.staleDays != null ? `${t('configHealth.treemapStale').replace('{0}', String(ws.staleDays))}` : t('configHealth.treemapNoContext'), COLORS.red));
+  if (badges.length === 0) badges.push(bdg(t('configHealth.noConfigFiles'), COLORS.muted));
   const lastAct = ws.lastActivity ? new Date(ws.lastActivity).toLocaleDateString() : 'N/A';
 
   detailEl.style.display = 'block';
@@ -635,14 +642,14 @@ function showTileDetail(ws: WorkspaceConfigHealth, container: HTMLElement): void
           <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${ws.requestCount} requests / ${ws.sessionCount} sessions / last: ${lastAct}</div>
         </div>
         <div style="display:flex;gap:16px;text-align:center;flex-shrink:0;">
-          <div><div style="font-size:16px;font-weight:700;color:${pdC};">${ws.progressiveDisclosureScore}</div><div style="font-size:10px;color:var(--text-muted);">Disclosure</div></div>
-          <div><div style="font-size:16px;font-weight:700;color:${iqC};">${ws.instructionQualityScore}</div><div style="font-size:10px;color:var(--text-muted);">Quality</div></div>
+          <div><div style="font-size:16px;font-weight:700;color:${pdC};">${ws.progressiveDisclosureScore}</div><div style="font-size:10px;color:var(--text-muted);">${t('configHealth.disclosure')}</div></div>
+          <div><div style="font-size:16px;font-weight:700;color:${iqC};">${ws.instructionQualityScore}</div><div style="font-size:10px;color:var(--text-muted);">${t('configHealth.quality')}</div></div>
         </div>
         <button id="ctxTileClose" style="margin-left:12px;background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:4px 8px;line-height:1;">${'\u00D7'}</button>
       </div>
       <div style="padding:0 16px 16px;border-top:1px solid var(--border-color, #30363d);">
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 8px;">${badges}</div>
-        ${ws.configFiles.length > 0 ? renderCfgFiles(ws.configFiles) : html`<div style="padding:8px 0;font-size:12px;color:var(--text-muted);">No context files found.</div>`}
+        ${ws.configFiles.length > 0 ? renderCfgFiles(ws.configFiles) : html`<div style="padding:8px 0;font-size:12px;color:var(--text-muted);">${t('configHealth.noContextFiles')}</div>`}
         ${ws.hookCoverage ? renderHooks(ws.hookCoverage) : null}
         ${ws.suggestions.length > 0 ? renderSuggestions(ws.suggestions) : null}
       </div>
@@ -668,15 +675,15 @@ function renderContextProvision(byHarness: Record<string, ContextProvisionScore>
   }));
 
   return html`
-    <h3 style="margin-top:24px;">Context Provision by Harness</h3>
-    <p style="color:var(--text-muted);font-size:12px;margin:4px 0 8px;">Click a row to show the detailed breakdown below.</p>
+    <h3 style="margin-top:24px;">${t('configHealth.provisionTitle')}</h3>
+    <p style="color:var(--text-muted);font-size:12px;margin:4px 0 8px;">${t('configHealth.provisionDesc')}</p>
     <div style="overflow-x:auto;margin:12px 0;">
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead><tr style="text-align:left;border-bottom:1px solid var(--border-color, #30363d);">
-          <th style="padding:8px;">Harness</th><th style="padding:8px;">Requests</th>
-          <th style="padding:8px;">File Refs</th><th style="padding:8px;">Instructions</th>
-          <th style="padding:8px;">Skills</th><th style="padding:8px;">Tools</th>
-          <th style="padding:8px;">Avg Context</th><th style="padding:8px;">Score</th>
+          <th style="padding:8px;">${t('configHealth.harness')}</th><th style="padding:8px;">${t('configHealth.requests')}</th>
+          <th style="padding:8px;">${t('configHealth.fileRefs')}</th><th style="padding:8px;">${t('configHealth.instructions')}</th>
+          <th style="padding:8px;">${t('configHealth.skills')}</th><th style="padding:8px;">${t('configHealth.tools')}</th>
+          <th style="padding:8px;">${t('configHealth.avgContext')}</th><th style="padding:8px;">${t('configHealth.score')}</th>
         </tr></thead>
         <tbody>${currentProvisionRows.map((row, idx) => {
           const e = row.entry;
@@ -708,7 +715,7 @@ function renderProvisionDetailPanel(row: ContextProvisionDetailRow): ComponentCh
 function renderProvisionDetail(e: ContextProvisionScore, fp: number, ip: number, sp: number, tp: number): ComponentChildren {
   const sc = e.score >= 45 ? COLORS.green : e.score >= 25 ? COLORS.yellow : COLORS.red;
   const cancelColor = e.cancelRate > 30 ? COLORS.red : e.cancelRate > 15 ? COLORS.yellow : COLORS.green;
-  const promptQuality = e.avgPromptLength >= 200 ? 'Detailed' : e.avgPromptLength >= 80 ? 'Moderate' : 'Brief';
+  const promptQuality = e.avgPromptLength >= 200 ? t('configHealth.detailed') : e.avgPromptLength >= 80 ? t('configHealth.moderate') : t('configHealth.brief');
   const promptColor = e.avgPromptLength >= 200 ? COLORS.green : e.avgPromptLength >= 80 ? COLORS.yellow : COLORS.red;
 
   return html`
@@ -721,22 +728,22 @@ function renderProvisionDetail(e: ContextProvisionScore, fp: number, ip: number,
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:18px;">
-        ${sBar('File References (30%)', fp)}${sBar('Custom Instructions (30%)', ip)}
-        ${sBar('Skills Used (20%)', sp)}${sBar('Tool Usage (20%)', tp)}
+        ${sBar(t('configHealth.fileRefsPct'), fp)}${sBar(t('configHealth.instructionsPct'), ip)}
+        ${sBar(t('configHealth.skillsPct'), sp)}${sBar(t('configHealth.toolsPct'), tp)}
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;">
-        ${metricCard('Avg Reqs / Session', String(e.avgRequestsPerSession), 'var(--text-primary, #c9d1d9)')}
-        ${metricCard('Avg Prompt Length', `${e.avgPromptLength.toLocaleString()} chars`, promptColor, promptQuality)}
-        ${metricCard('Avg Response Length', `${e.avgResponseLength.toLocaleString()} chars`, 'var(--text-primary, #c9d1d9)')}
-        ${metricCard('Cancel Rate', `${e.cancelRate}%`, cancelColor)}
+        ${metricCard(t('configHealth.avgReqsSession'), String(e.avgRequestsPerSession), 'var(--text-primary, #c9d1d9)')}
+        ${metricCard(t('configHealth.avgPromptLen'), `${e.avgPromptLength.toLocaleString()} chars`, promptColor, promptQuality)}
+        ${metricCard(t('configHealth.avgResponseLen'), `${e.avgResponseLength.toLocaleString()} chars`, 'var(--text-primary, #c9d1d9)')}
+        ${metricCard(t('configHealth.cancelRate'), `${e.cancelRate}%`, cancelColor)}
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;">
-        ${rankList('Mode Distribution', e.modeDistribution.map(m => ({ label: m.mode, count: m.count })), e.totalRequests)}
-        ${rankList('Top Models', e.topModels.map(m => ({ label: m.model, count: m.count })), e.totalRequests)}
-        ${rankList('Top Tools', e.topTools.map(t => ({ label: t.tool, count: t.count })), e.totalRequests)}
-        ${rankList('Top Referenced Files', e.topReferencedFiles.map(f => ({ label: f.file, count: f.count })), e.withFileRefs || 1)}
+        ${rankList(t('configHealth.modeDistribution'), e.modeDistribution.map(m => ({ label: m.mode, count: m.count })), e.totalRequests)}
+        ${rankList(t('configHealth.topModels'), e.topModels.map(m => ({ label: m.model, count: m.count })), e.totalRequests)}
+        ${rankList(t('configHealth.topTools'), e.topTools.map(item => ({ label: item.tool, count: item.count })), e.totalRequests)}
+        ${rankList(t('configHealth.topRefFiles'), e.topReferencedFiles.map(f => ({ label: f.file, count: f.count })), e.withFileRefs || 1)}
       </div>
     </div>`;
 }
@@ -750,7 +757,7 @@ function metricCard(label: string, value: string, color: string, subtitle?: stri
 }
 
 function rankList(title: string, items: { label: string; count: number }[], total: number): ComponentChildren {
-  if (items.length === 0) return html`<div style="padding:8px 10px;border-radius:6px;background:var(--bg-tertiary, #161b22);"><div style="font-size:11px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">${title}</div><div style="font-size:11px;color:var(--text-muted);font-style:italic;">No data</div></div>`;
+  if (items.length === 0) return html`<div style="padding:8px 10px;border-radius:6px;background:var(--bg-tertiary, #161b22);"><div style="font-size:11px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">${title}</div><div style="font-size:11px;color:var(--text-muted);font-style:italic;">${t('configHealth.noData')}</div></div>`;
   return html`<div style="padding:8px 10px;border-radius:6px;background:var(--bg-tertiary, #161b22);">
     <div style="font-size:11px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">${title}</div>
     ${items.map(it => {
@@ -778,9 +785,9 @@ function sBar(label: string, pct: number, tooltip?: string): ComponentChildren {
 /* ── Config Files ─────────────────────────────────────────────────── */
 
 function renderCfgFiles(files: ConfigFileInfo[]): ComponentChildren {
-  return html`<div style="margin:8px 0;"><div style="font-weight:500;font-size:13px;margin-bottom:6px;color:var(--text-secondary, #c9d1d9);">Config Files</div><div style="display:flex;flex-direction:column;gap:4px;">${files.map(f => {
+  return html`<div style="margin:8px 0;"><div style="font-weight:500;font-size:13px;margin-bottom:6px;color:var(--text-secondary, #c9d1d9);">${t('configHealth.configFiles')}</div><div style="display:flex;flex-direction:column;gap:4px;">${files.map(f => {
     const sc = f.sizeVerdict === 'oversized' ? COLORS.red : f.sizeVerdict === 'moderate' ? COLORS.yellow : COLORS.green;
-    const sl = f.sizeVerdict === 'oversized' ? 'OVERSIZED' : f.sizeVerdict === 'moderate' ? 'moderate' : 'compact';
+    const sl = f.sizeVerdict === 'oversized' ? t('configHealth.oversized') : f.sizeVerdict === 'moderate' ? t('configHealth.moderate') : t('configHealth.compact');
     const ki = fKindIcon(f.kind);
     const ic = f.markdownIssues.length;
     return html`<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:4px;background:var(--bg-secondary, #0d1117);font-size:12px;">
@@ -789,7 +796,7 @@ function renderCfgFiles(files: ConfigFileInfo[]): ComponentChildren {
       <span style="color:var(--text-muted);">${f.lines} lines</span>
       <span style="color:var(--text-muted);">${fmtSz(f.chars)}</span>
       <span style="color:${sc};font-size:11px;font-weight:500;">${sl}</span>
-      ${f.lastModified ? html`<span style="color:var(--text-muted);font-size:11px;" title="Last modified">${new Date(f.lastModified).toLocaleDateString()}</span>` : null}
+      ${f.lastModified ? html`<span style="color:var(--text-muted);font-size:11px;" title=${t('configHealth.lastModified')}>${new Date(f.lastModified).toLocaleDateString()}</span>` : null}
       ${ic > 0 ? html`<span style="color:${COLORS.yellow};font-size:11px;" title=${f.markdownIssues.join('; ')}>${ic} issue${ic > 1 ? 's' : ''}</span>` : null}
     </div>`;
   })}</div></div>`;
@@ -799,22 +806,22 @@ function renderCfgFiles(files: ConfigFileInfo[]): ComponentChildren {
 
 function renderHooks(hooks: HookCoverageInfo): ComponentChildren {
   const evts: { n: string; a: boolean; d: string }[] = [
-    { n: 'PreToolUse', a: hooks.hasPreToolUse, d: 'Security boundaries' },
-    { n: 'PostToolUse', a: hooks.hasPostToolUse, d: 'Auto-formatting, audit logging' },
-    { n: 'SessionStart', a: hooks.hasSessionStart, d: 'Environment sync' },
-    { n: 'PermissionRequest', a: hooks.hasPermissionRequest, d: 'Auto-approve/deny' },
+    { n: 'PreToolUse', a: hooks.hasPreToolUse, d: t('configHealth.securityBoundaries') },
+    { n: 'PostToolUse', a: hooks.hasPostToolUse, d: t('configHealth.autoFormatting') },
+    { n: 'SessionStart', a: hooks.hasSessionStart, d: t('configHealth.envSync') },
+    { n: 'PermissionRequest', a: hooks.hasPermissionRequest, d: t('configHealth.autoApproveDeny') },
   ];
   const extra = hooks.hookEvents.filter(e => !['PreToolUse', 'PostToolUse', 'SessionStart', 'PermissionRequest'].includes(e));
-  return html`<div style="margin:8px 0;"><div style="font-weight:500;font-size:13px;margin-bottom:6px;color:var(--text-secondary);">Hook Coverage (${hooks.totalHooks})</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${evts.map(e => {
+  return html`<div style="margin:8px 0;"><div style="font-weight:500;font-size:13px;margin-bottom:6px;color:var(--text-secondary);">${t('configHealth.hookCoverage').replace('{0}', String(hooks.totalHooks))}</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${evts.map(e => {
     const c = e.a ? COLORS.green : COLORS.muted;
     return html`<div style="padding:4px 10px;border-radius:4px;background:var(--bg-secondary, #0d1117);font-size:12px;display:flex;align-items:center;gap:4px;" title=${e.d}><span style="color:${c};">${e.a ? '\u2713' : '\u2717'}</span><span style="color:${e.a ? 'var(--text-primary)' : 'var(--text-muted)'};">${e.n}</span></div>`;
-  })}</div>${extra.length > 0 ? html`<div style="margin-top:4px;font-size:11px;color:var(--text-muted);">Additional: ${extra.join(', ')}</div>` : null}</div>`;
+  })}</div>${extra.length > 0 ? html`<div style="margin-top:4px;font-size:11px;color:var(--text-muted);">${t('configHealth.additional')} ${extra.join(', ')}</div>` : null}</div>`;
 }
 
 /* ── Suggestions ──────────────────────────────────────────────────── */
 
 function renderSuggestions(suggestions: string[]): ComponentChildren {
-  return html`<div style="margin:8px 0;padding:8px 12px;border-radius:6px;border-left:3px solid ${COLORS.yellow};background:rgba(210,153,34,0.05);"><div style="font-size:12px;font-weight:500;color:${COLORS.yellow};margin-bottom:4px;">Suggestions</div><ul style="margin:0;padding-left:16px;font-size:12px;color:var(--text-secondary, #8b949e);">${suggestions.slice(0, 5).map(s => html`<li style="margin:2px 0;">${s}</li>`)}</ul></div>`;
+  return html`<div style="margin:8px 0;padding:8px 12px;border-radius:6px;border-left:3px solid ${COLORS.yellow};background:rgba(210,153,34,0.05);"><div style="font-size:12px;font-weight:500;color:${COLORS.yellow};margin-bottom:4px;">${t('configHealth.suggestions')}</div><ul style="margin:0;padding-left:16px;font-size:12px;color:var(--text-secondary, #8b949e);">${suggestions.slice(0, 5).map(s => html`<li style="margin:2px 0;">${s}</li>`)}</ul></div>`;
 }
 
 /* ── Helpers ──────────────────────────────────────────────────────── */

@@ -146,9 +146,9 @@ function getDatasetValue(element: HTMLElement, key: string): string | null {
 }
 
 function severityIcon(sev: string): ComponentChildren {
-  if (sev === 'high') return html`<span class="sev-icon sev-high" title="High impact">!</span>`;
-  if (sev === 'medium') return html`<span class="sev-icon sev-medium" title="Medium impact">~</span>`;
-  return html`<span class="sev-icon sev-low" title="Low impact">-</span>`;
+  if (sev === 'high') return html`<span class="sev-icon sev-high" title=${t('ap.highImpact')}>!</span>`;
+  if (sev === 'medium') return html`<span class="sev-icon sev-medium" title=${t('ap.mediumImpact')}>~</span>`;
+  return html`<span class="sev-icon sev-low" title=${t('ap.lowImpact')}>-</span>`;
 }
 
 function severityBadge(sev: string): ComponentChildren {
@@ -243,7 +243,7 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
   render(html`<div>
     <div class="ap-page-header">
       <h1>${t('antipatterns.title')}</h1>
-      <p class="ap-page-intro">Review health scores across practice groups, drill into individual findings, and manage the rules that detect them. Switch to the <strong>Rules</strong> tab to browse, create, or edit detection rules using the built-in DSL.</p>
+      <p class="ap-page-intro">${t('ap.pageIntro')}</p>
     </div>
 
     <div class="ap-tab-bar">
@@ -276,7 +276,7 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
                 ? html`<div class="ap-score-tip ap-improvements">${g.improvements.map(i => html`<span>${i}</span>`)}</div>`
                 : g.topIssue
                   ? html`<div class="ap-score-tip">${g.topIssue}</div>`
-                  : html`<div class="ap-score-tip muted">No issues detected</div>`}
+                  : html`<div class="ap-score-tip muted">${t('ap.noIssuesDetected')}</div>`}
             </div>`;
         })}
       </div>
@@ -288,36 +288,36 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
       <div class="ap-rules-header" id="ap-rules-header">
         <div class="ap-rules-title-row">
           <div class="ap-rules-stats">
-          ${statPill('Total', rules.length)}${statPill('Triggered', triggeredRules, triggeredRules > 0 ? 'var(--yellow)' : 'var(--green)')}
+          ${statPill(t('ap.total'), rules.length)}${statPill(t('ap.triggered'), triggeredRules, triggeredRules > 0 ? 'var(--yellow)' : 'var(--green)')}
           </div>
         </div>
         <div class="ap-rules-actions">
-          <button class="rule-btn rule-btn-secondary" id="rule-dsl-ref-btn" title="DSL field, function & parser reference">DSL Reference</button>
-          <button class="rule-btn rule-btn-secondary" id="rule-coverage-btn" title="Rule x workspace coverage heatmap">Coverage</button>
-          <button class="rule-btn rule-btn-secondary" id="rule-help-btn" title="How rule layers work">? Help</button>
-          <button class="rule-btn rule-btn-primary" id="rule-new-btn" title="Create a new custom rule">+ New Rule</button>
+          <button class="rule-btn rule-btn-secondary" id="rule-dsl-ref-btn">${t('ap.dslReference')}</button>
+          <button class="rule-btn rule-btn-secondary" id="rule-coverage-btn">${t('ap.coverage')}</button>
+          <button class="rule-btn rule-btn-secondary" id="rule-help-btn">${t('ap.help')}</button>
+          <button class="rule-btn rule-btn-primary" id="rule-new-btn">${t('ap.newRule')}</button>
         </div>
       </div>
 
       <div class="rule-search-bar" id="rule-search-bar">
-        <input type="text" class="rule-search-input" id="rule-search" placeholder="Search rules by name, group, or tag..." />
-        <label class="rule-filter-chip" title="Show only personal + project rules">
+        <input type="text" class="rule-search-input" id="rule-search" placeholder=${t('ap.searchPlaceholder')} />
+        <label class="rule-filter-chip" title=${t('ap.localOnlyTooltip')}>
           <input type="checkbox" id="rule-filter-local" />
-          Local only
+          ${t('ap.localOnly')}
         </label>
       </div>
 
       ${pending.length > 0 ? html`
       <div class="rule-pending-banner" id="rule-pending-banner">
         <div class="rule-pending-text">
-          <strong>${pending.length}</strong> local rule file${pending.length === 1 ? '' : 's'} blocked pending approval.
-          These files are present on disk but haven't been approved to run.
+          <strong>${pending.length}</strong> ${t('ap.pendingApproval')}
+          ${t('ap.pendingDesc')}
           <ul class="rule-pending-list">
             ${pending.slice(0, 5).map(p => html`<li><code>[${p.layer}/${p.kind}]</code> ${p.filePath}</li>`)}
             ${pending.length > 5 ? html`<li class="muted">+${pending.length - 5} more</li>` : null}
           </ul>
         </div>
-        <button class="rule-btn rule-btn-primary" id="rule-review-pending-btn">Review & Approve</button>
+        <button class="rule-btn rule-btn-primary" id="rule-review-pending-btn">${t('ap.reviewApprove')}</button>
       </div>` : null}
 
       <div class="rule-list" id="rule-list">
@@ -327,9 +327,9 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
       <!-- Detail panel (hidden by default) -->
       <div class="rule-detail-panel" id="rule-detail-panel" style="display:none;">
         <div class="rule-detail-header">
-          <button class="rule-btn rule-btn-back" id="rule-back-btn">${'\u2190'} Back</button>
+          <button class="rule-btn rule-btn-back" id="rule-back-btn">${'\u2190'} ${t('ap.back')}</button>
           <div class="rule-detail-actions">
-            <button class="rule-btn rule-btn-secondary" id="rule-edit-source-btn">Edit Source</button>
+            <button class="rule-btn rule-btn-secondary" id="rule-edit-source-btn">${t('ap.editSource')}</button>
           </div>
         </div>
         <div id="rule-detail-content"></div>
@@ -340,10 +340,10 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
     <div class="rule-source-modal" id="rule-editor-modal" style="display:none;">
       <div class="rule-editor-modal-content">
         <div class="rule-editor-modal-header">
-          <h3 id="rule-editor-modal-title">New Rule</h3>
+          <h3 id="rule-editor-modal-title">${t('ap.newRuleTitle')}</h3>
           <div class="rule-editor-modal-tabs">
-            <button class="rule-editor-tab active" data-editor-tab="form">Form</button>
-            <button class="rule-editor-tab" data-editor-tab="source">Source</button>
+            <button class="rule-editor-tab active" data-editor-tab="form">${t('ap.formTab')}</button>
+            <button class="rule-editor-tab" data-editor-tab="source">${t('ap.sourceTab')}</button>
           </div>
           <button class="rule-btn rule-btn-secondary" id="rule-editor-close">${'\u00D7'}</button>
         </div>
@@ -351,9 +351,9 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
         <!-- AI Assist bar -->
         <div class="rule-ai-bar">
           <input type="text" class="rule-ai-input" id="rule-ai-input"
-            placeholder="Describe the anti-pattern to detect... AI will fill the form" />
-          <button class="rule-btn rule-btn-ai" id="rule-ai-generate">Generate</button>
-          <button class="rule-btn rule-btn-secondary rule-ai-prompt-info" id="rule-ai-prompt-info" title="View the prompt sent to AI">?</button>
+            placeholder=${t('ap.aiPlaceholder')} />
+          <button class="rule-btn rule-btn-ai" id="rule-ai-generate">${t('ap.generate')}</button>
+          <button class="rule-btn rule-btn-secondary rule-ai-prompt-info" id="rule-ai-prompt-info" title=${t('ap.viewPrompt')}>?</button>
         </div>
         <div class="rule-ai-status" id="rule-ai-status" style="display:none;"></div>
 
@@ -361,17 +361,17 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
         <div class="rule-editor-body" id="rule-editor-form" data-editor-panel="form">
           <div class="rule-form-row rule-form-row-2">
             <div class="rule-form-field">
-              <label>Rule ID</label>
+              <label>${t('ap.ruleId')}</label>
               <input type="text" id="rf-id" placeholder="my-custom-rule" spellcheck="false" />
             </div>
             <div class="rule-form-field">
-              <label>Name</label>
+              <label>${t('ap.name')}</label>
               <input type="text" id="rf-name" placeholder="My Custom Rule" />
             </div>
           </div>
           <div class="rule-form-row rule-form-row-4">
             <div class="rule-form-field">
-              <label>Group</label>
+              <label>${t('ap.group')}</label>
               <select id="rf-group">
                 <option value="prompt-quality">Prompt Quality</option>
                 <option value="session-hygiene">Session Hygiene</option>
@@ -381,7 +381,7 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
               </select>
             </div>
             <div class="rule-form-field">
-              <label>Severity</label>
+              <label>${t('ap.severity')}</label>
               <select id="rf-severity">
                 <option value="low">Low</option>
                 <option value="medium" selected>Medium</option>
@@ -389,43 +389,43 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
               </select>
             </div>
             <div class="rule-form-field">
-              <label>Scope</label>
+              <label>${t('ap.scope')}</label>
               <select id="rf-scope">
-                <option value="requests">Requests</option>
-                <option value="sessions">Sessions</option>
+                <option value="requests">${t('ap.requests')}</option>
+                <option value="sessions">${t('ap.sessions')}</option>
               </select>
             </div>
             <div class="rule-form-field">
-              <label>Version</label>
+              <label>${t('ap.version')}</label>
               <input type="number" id="rf-version" value="1" min="1" />
             </div>
           </div>
           <div class="rule-form-field">
-            <label>Tags <span class="muted">(comma-separated)</span></label>
+            <label>${t('ap.tags')} <span class="muted">${t('ap.commaSeparated')}</span></label>
             <input type="text" id="rf-tags" placeholder="custom, prompt, quality" />
           </div>
           <div class="rule-form-field">
-            <label>Description</label>
-            <textarea id="rf-description" rows="2" placeholder="What this rule detects."></textarea>
+            <label>${t('ap.description')}</label>
+            <textarea id="rf-description" rows="2" placeholder=${t('ap.descPlaceholder')}></textarea>
           </div>
           <div class="rule-form-field">
-            <label>When Triggered <span class="muted">${'(use {{count}}, {{total}}, {{pct}}, {{extra.key}})'}</span></label>
+            <label>${t('ap.whenTriggered')} <span class="muted">${'(use {{count}}, {{total}}, {{pct}}, {{extra.key}})'}</span></label>
             <textarea id="rf-when-triggered" rows="2" placeholder="${'{{count}} occurrences detected out of {{total}} ({{pct}}).'}"></textarea>
           </div>
           <div class="rule-form-field">
-            <label>How to Improve</label>
-            <textarea id="rf-how-to-improve" rows="2" placeholder="Actionable advice for the user."></textarea>
+            <label>${t('ap.howToImprove')}</label>
+            <textarea id="rf-how-to-improve" rows="2" placeholder=${t('ap.improvePlaceholder')}></textarea>
           </div>
           <div class="rule-form-field">
-            <label>Examples Template</label>
+            <label>${t('ap.examplesTemplate')}</label>
             <input type="text" id="rf-examples" placeholder=${"\"{{message}}...\""} />
           </div>
           <div class="rule-form-field">
-            <label>Thresholds <span class="muted">(key: value, one per line)</span></label>
+            <label>${t('ap.thresholds')} <span class="muted">${t('ap.thresholdsHint')}</span></label>
             <textarea id="rf-thresholds" rows="2" placeholder="myThreshold: 0.5" class="rule-mono"></textarea>
           </div>
           <div class="rule-form-field">
-            <label>Detection Logic <span class="muted">(DSL)</span></label>
+            <label>${t('ap.detectionLogic')} <span class="muted">${t('ap.dsl')}</span></label>
             <textarea id="rf-detect" rows="8" class="rule-mono" spellcheck="false" placeholder=${"scan: requests\nmatch: messageLength > 0\naggregate: count\ncheck: count >= thresholds.myThreshold\nexamples: \"{{messageText | truncate:60}}\""}></textarea>
           </div>
           <textarea id="rf-patterns" style="display:none"></textarea>
@@ -442,9 +442,9 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
         <div class="rule-test-results" id="rule-test-results" style="display:none;"></div>
 
         <div class="rule-editor-footer">
-          <button class="rule-btn rule-btn-secondary" id="rule-editor-cancel">Cancel</button>
-          <button class="rule-btn rule-btn-test" id="rule-editor-test">Test Rule</button>
-          <button class="rule-btn rule-btn-primary" id="rule-editor-save">Save Rule</button>
+          <button class="rule-btn rule-btn-secondary" id="rule-editor-cancel">${t('ap.cancel')}</button>
+          <button class="rule-btn rule-btn-test" id="rule-editor-test">${t('ap.testRule')}</button>
+          <button class="rule-btn rule-btn-primary" id="rule-editor-save">${t('ap.saveRule')}</button>
         </div>
       </div>
     </div>
@@ -453,7 +453,7 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
     <div class="rule-source-modal" id="rule-ai-prompt-modal" style="display:none;">
       <div class="rule-source-modal-content">
         <div class="rule-source-modal-header">
-          <h3>AI System Prompt</h3>
+          <h3>${t('ap.aiSystemPrompt')}</h3>
           <button class="rule-btn rule-btn-secondary" id="rule-ai-prompt-close">${'\u00D7'}</button>
         </div>
         <pre class="rule-ai-prompt-view" id="rule-ai-prompt-view"></pre>
@@ -464,7 +464,7 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
     <div class="rule-source-modal" id="rule-dsl-ref-modal" style="display:none;">
       <div class="rule-source-modal-content rule-dsl-ref-content">
         <div class="rule-source-modal-header">
-          <h3>DSL Reference</h3>
+          <h3>${t('ap.dslReference')}</h3>
           <button class="rule-btn rule-btn-secondary" id="rule-dsl-ref-close">${'\u00D7'}</button>
         </div>
         <div class="rule-dsl-ref-body" id="rule-dsl-ref-body">
@@ -477,7 +477,7 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
     <div class="rule-source-modal" id="rule-coverage-modal" style="display:none;">
       <div class="rule-source-modal-content rule-coverage-content">
         <div class="rule-source-modal-header">
-          <h3>Rule Coverage Heatmap</h3>
+          <h3>${t('ap.ruleCoverageHeatmap')}</h3>
           <button class="rule-btn rule-btn-secondary" id="rule-coverage-close">${'\u00D7'}</button>
         </div>
         <div class="rule-coverage-body" id="rule-coverage-body">
@@ -490,43 +490,43 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
     <div class="rule-source-modal" id="rule-help-modal" style="display:none;">
       <div class="rule-source-modal-content rule-help-content">
         <div class="rule-source-modal-header">
-          <h3>Rule Layers</h3>
+          <h3>${t('ap.ruleLayers')}</h3>
           <button class="rule-btn rule-btn-secondary" id="rule-help-close">${'\u00D7'}</button>
         </div>
         <div class="rule-help-body">
-          <p>Rules are loaded from three layers. Higher layers override lower ones when rule IDs match.</p>
+          <p>${t('ap.ruleLayersDesc')}</p>
           <div class="rule-help-layers">
             <div class="rule-help-layer">
               <div class="rule-help-layer-header">
-                <span class="rule-source-badge" style="--src-color:${COLORS.green}">Project</span>
-                <span class="rule-help-precedence">Highest priority</span>
+                <span class="rule-source-badge" style="--src-color:${COLORS.green}">${t('ap.project')}</span>
+                <span class="rule-help-precedence">${t('ap.highestPriority')}</span>
               </div>
-              <p>Workspace-specific rules. Shared with your team via version control.</p>
+              <p>${t('ap.projectDesc')}</p>
               <code class="rule-help-path">${'<workspace>/.ai-engineer-coach/rules/*.md'}</code>
               ${renderLayerStatus(layers, 'project')}
             </div>
             <div class="rule-help-layer">
               <div class="rule-help-layer-header">
-                <span class="rule-source-badge" style="--src-color:${COLORS.blue}">Personal</span>
-                <span class="rule-help-precedence">Medium priority</span>
+                <span class="rule-source-badge" style="--src-color:${COLORS.blue}">${t('ap.personal')}</span>
+                <span class="rule-help-precedence">${t('ap.mediumPriority')}</span>
               </div>
-              <p>Your personal rules. Applied across all workspaces on this machine.</p>
+              <p>${t('ap.personalDesc')}</p>
               <code class="rule-help-path">~/.ai-engineer-coach/rules/*.md</code>
               ${renderLayerStatus(layers, 'personal')}
             </div>
             <div class="rule-help-layer">
               <div class="rule-help-layer-header">
-                <span class="rule-source-badge" style="--src-color:var(--text-muted)">Built-in</span>
-                <span class="rule-help-precedence">Lowest priority</span>
+                <span class="rule-source-badge" style="--src-color:var(--text-muted)">${t('ap.builtIn')}</span>
+                <span class="rule-help-precedence">${t('ap.lowestPriority')}</span>
               </div>
-              <p>Default rules shipped with the extension. Always available.</p>
+              <p>${t('ap.builtInDesc')}</p>
               ${renderLayerStatus(layers, 'built-in')}
             </div>
           </div>
           <div class="rule-help-howto">
-            <h4>Creating a custom rule</h4>
-            <p>Create a <code>.md</code> file in any rule directory above. The filename (without extension) becomes the rule ID.</p>
-            <p>To override a built-in rule, create a file with the same name (e.g. <code>lazy-prompting.md</code>) in your personal or project rules directory.</p>
+            <h4>${t('ap.creatingRule')}</h4>
+            <p>${t('ap.creatingRuleDesc')}</p>
+            <p>${t('ap.overrideDesc')}</p>
           </div>
         </div>
       </div>
@@ -599,7 +599,7 @@ function renderFindings(
 
     if (groupPatterns.length === 0) {
       const good = el('div', 'ap-group-clean');
-      good.textContent = 'All checks passing -- no anti-patterns detected.';
+      good.textContent = t('ap.allChecksPassing');
       section.appendChild(good);
     } else {
       if (gs && gs.improvements.length > 0) {
@@ -617,11 +617,11 @@ function renderFindings(
           </div>
           <div class="ap-finding-body">
             <div class="ap-finding-section ap-finding-problem">
-              <span class="ap-finding-label">Problem</span>
+              <span class="ap-finding-label">${t('antipatterns.problem')}</span>
               <span>${p.description}</span>
             </div>
             <div class="ap-finding-section ap-finding-action">
-              <span class="ap-finding-label">Action</span>
+              <span class="ap-finding-label">${t('antipatterns.action')}</span>
               <span>${p.suggestion}</span>
             </div>
             ${renderOccurrencePanel(p)}
@@ -665,10 +665,10 @@ async function explainOccurrence(
   }
 
   button.disabled = true;
-  button.textContent = 'Thinking...';
+  button.textContent = t('ap.thinking');
   resultDiv.style.display = '';
   resultDiv.className = 'occ-explain-result occ-explain-loading';
-  resultDiv.textContent = 'Asking AI for an explanation...';
+  resultDiv.textContent = t('ap.askingAi');
 
   try {
     const request: { ruleId: string; sessionId: string; filter?: Record<string, unknown> } = {
@@ -693,7 +693,7 @@ async function explainOccurrence(
     resultDiv.textContent = err instanceof Error ? err.message : String(err);
   } finally {
     button.disabled = false;
-    button.textContent = 'Why?';
+    button.textContent = t('ap.why');
   }
 }
 
@@ -837,7 +837,7 @@ function renderWorkspaceOccurrences(
       <div class="ap-occ-body">
         <div class="occ-ws-list">
           ${displayFlagged.map(wsBar)}
-          ${displayHealthy.length > 0 ? html`<div class="occ-ws-divider">Healthy workspaces</div>${displayHealthy.map(wsBar)}` : null}
+          ${displayHealthy.length > 0 ? html`<div class="occ-ws-divider">${t('ap.healthyWs')}</div>${displayHealthy.map(wsBar)}` : null}
           ${moreCount > 0 ? html`<div class="occ-session-more">+ ${moreCount} more workspaces</div>` : null}
         </div>
         ${renderExamplesBlock(p.examples)}
@@ -884,7 +884,7 @@ function renderSessionOccurrences(
           <span class="occ-session-ws">${truncWs}</span>
           <span class="occ-session-date">${dateStr} ${timeStr}</span>
           <span class="occ-session-count">${info.count}x</span>
-          <button class="occ-explain-btn" data-rule-id=${p.id} data-session-id=${sid} title="Ask AI why this session triggered the rule">Why?</button>
+          <button class="occ-explain-btn" data-rule-id=${p.id} data-session-id=${sid}>${t('ap.why')}</button>
         </div>
         ${info.messages.length > 0 ? html`<div class="occ-msg-preview">${info.messages.map(m => html`<span>${m.length > 80 ? m.substring(0, 78) + '...' : m}</span>`)}</div>` : null}
         <div class="occ-explain-result" data-session-id=${sid} style="display:none;"></div>
@@ -933,8 +933,8 @@ function renderGroupedRuleCards(
         <div class="rule-group-header">
           <span class="rule-group-dot" style="background:${groupColor}"></span>
           <span class="rule-group-name">${groupName}</span>
-          <span class="rule-group-count">${groupRules.length} rules</span>
-          ${triggeredCount > 0 ? html`<span class="rule-group-triggered">${triggeredCount} triggered</span>` : null}
+          <span class="rule-group-count">${groupRules.length} ${t('ap.rules')}</span>
+          ${triggeredCount > 0 ? html`<span class="rule-group-triggered">${triggeredCount} ${t('ap.triggered').toLowerCase()}</span>` : null}
         </div>
         <div class="rule-cards">
           ${groupRules.map(r => renderRuleCard(r, previewMap.get(r.id), dateHistograms[r.id], groupColor))}
@@ -982,7 +982,7 @@ function renderRuleCard(
             <span class="rule-card-stat-label">rate</span>
           </div>
         </div>
-        ${histSvg ? html`<div class="rule-card-histogram" title="Weekly trend">${histSvg}</div>` : null}
+        ${histSvg ? html`<div class="rule-card-histogram" title=${t('ap.weeklyTrend')}>${histSvg}</div>` : null}
       </div>
     </div>
   `;
@@ -1097,7 +1097,7 @@ function wireRulesSection(
 
 function renderRulePreviewStats(preview: RulePreview | undefined): ComponentChildren {
   const flaggedColor = preview?.triggered ? 'var(--yellow)' : 'var(--green)';
-  return html`${statPill('Flagged', preview?.occurrences ?? 0, flaggedColor)}${statPill('Total', preview?.total ?? 0)}${statPill('Rate', `${preview?.pct ?? 0}%`, flaggedColor)}${statPill('Status', preview?.triggered ? 'TRIGGERED' : 'CLEAN', flaggedColor)}`;
+  return html`${statPill(t('ap.flagged'), preview?.occurrences ?? 0, flaggedColor)}${statPill(t('ap.total'), preview?.total ?? 0)}${statPill(t('ap.rate'), `${preview?.pct ?? 0}%`, flaggedColor)}${statPill(t('ap.status'), preview?.triggered ? t('ap.triggeredStatus') : t('ap.cleanStatus'), flaggedColor)}`;
 }
 
 function renderRuleDetailContent(rule: RuleDetail, preview: RulePreview | undefined, ruleId: string): ComponentChildren {
@@ -1121,7 +1121,7 @@ function renderRuleDetailContent(rule: RuleDetail, preview: RulePreview | undefi
 
     <div class="rule-detail-sections">
       <div class="rule-detail-section">
-        <h3>Current Data Preview</h3>
+        <h3>${t('ap.currentDataPreview')}</h3>
         <div class="rule-preview-stats">${renderRulePreviewStats(preview)}</div>
         ${preview?.previewDescription ? html`<div class="rule-preview-desc">${preview.previewDescription}</div>` : null}
         ${preview && preview.previewExamples.length > 0 ? html`
@@ -1134,8 +1134,8 @@ function renderRuleDetailContent(rule: RuleDetail, preview: RulePreview | undefi
 
       ${thresholdEntries.length > 0 ? html`
         <div class="rule-detail-section">
-          <h3>Thresholds</h3>
-          <p class="rule-threshold-hint">Adjust these values to tune when this rule triggers.</p>
+          <h3>${t('ap.thresholds')}</h3>
+          <p class="rule-threshold-hint">${t('ap.adjustThresholds')}</p>
           <div class="rule-thresholds">
             ${thresholdEntries.map(([key, value]) => thresholdRow(key, value, ruleId))}
           </div>
@@ -1143,18 +1143,18 @@ function renderRuleDetailContent(rule: RuleDetail, preview: RulePreview | undefi
       ` : null}
 
       <div class="rule-detail-section">
-        <h3>When Triggered</h3>
+        <h3>${t('ap.whenTriggered')}</h3>
         <div class="rule-template-block">${rule.descriptionTemplate}</div>
       </div>
 
       <div class="rule-detail-section">
-        <h3>How to Improve</h3>
+        <h3>${t('ap.howToImprove')}</h3>
         <div class="rule-template-block">${rule.suggestionTemplate}</div>
       </div>
 
       ${rule.tags.length > 0 ? html`
         <div class="rule-detail-section">
-          <h3>Tags</h3>
+          <h3>${t('ap.tags')}</h3>
           <div class="rule-card-tags">${rule.tags.map(tag => html`<span class="rule-tag">${tag}</span>`)}</div>
         </div>
       ` : null}
@@ -1227,8 +1227,8 @@ function showRuleDetail(
 
 function renderLayerStatus(layers: RuleLayerInfo[], layerName: string): ComponentChildren {
   const info = layers.find(l => l.layer === layerName);
-  if (!info) return html`<span class="rule-help-status rule-help-na">Not applicable</span>`;
-  if (!info.exists) return html`<span class="rule-help-status rule-help-missing">Directory not found</span>`;
+  if (!info) return html`<span class="rule-help-status rule-help-na">${t('ap.notApplicable')}</span>`;
+  if (!info.exists) return html`<span class="rule-help-status rule-help-missing">${t('ap.dirNotFound')}</span>`;
   return html`<span class="rule-help-status rule-help-ok">${info.ruleCount} rule${info.ruleCount !== 1 ? 's' : ''} loaded</span>`;
 }
 
