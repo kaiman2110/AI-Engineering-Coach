@@ -5,6 +5,8 @@
 
 /* Shared webview utilities -- RPC, DOM helpers, Chart.js setup */
 
+import { t } from './i18n/index';
+
 declare function acquireVsCodeApi(): { postMessage(msg: unknown): void; getState(): unknown; setState(s: unknown): void };
 export const vscode = acquireVsCodeApi();
 
@@ -377,15 +379,15 @@ export function scoreColor(score: number): string {
 
 export function scoreLabel(score: number, variant: 'dashboard' | 'antipatterns' = 'dashboard'): string {
   if (variant === 'antipatterns') {
-    if (score >= SCORE_EXCELLENT) return 'Great';
-    if (score >= SCORE_GOOD) return 'Good';
-    if (score >= SCORE_FAIR) return 'Fair';
-    return 'Needs Work';
+    if (score >= SCORE_EXCELLENT) return t('common.score.great');
+    if (score >= SCORE_GOOD) return t('common.score.good');
+    if (score >= SCORE_FAIR) return t('common.score.fair');
+    return t('common.score.needsWork');
   }
-  if (score >= SCORE_EXCELLENT) return 'Excellent';
-  if (score >= SCORE_GOOD) return 'Good';
-  if (score >= SCORE_FAIR) return 'Needs Work';
-  return 'Critical';
+  if (score >= SCORE_EXCELLENT) return t('common.score.excellent');
+  if (score >= SCORE_GOOD) return t('common.score.good');
+  if (score >= SCORE_FAIR) return t('common.score.needsWork');
+  return t('common.score.critical');
 }
 
 export function ringHtml(score: number, color: string, size: number): string {
@@ -437,8 +439,8 @@ function showErrorFallback(pageName: string, container: HTMLElement, err: unknow
   const message = err instanceof Error ? err.message : String(err);
   setHtml(container, html`
     <div class="error-boundary">
-      <h3>\u26a0\ufe0f Failed to render ${pageName}</h3>
+      <h3>\u26a0\ufe0f ${t('error.failedToRender')} ${pageName}</h3>
       <p class="error-message">${message}</p>
-      <p class="error-hint">Try reloading the dashboard (Ctrl+Shift+P \u2192 "AI Engineer Coach: Reload Data")</p>
+      <p class="error-hint">${t('error.reloadHint')}</p>
     </div>`);
 }
