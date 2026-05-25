@@ -13,6 +13,7 @@ export type TranslationKey =
   | CommonKeys
   | LoadingKeys
   | ErrorKeys
+  | NavKeys
   | DashboardKeys;
 
 type CommonKeys =
@@ -51,7 +52,29 @@ type LoadingKeys =
 
 type ErrorKeys =
   | 'error.failedToRender'
-  | 'error.reloadHint';
+  | 'error.reloadHint'
+  | 'error.title';
+
+type NavKeys =
+  | 'nav.observe'
+  | 'nav.measure'
+  | 'nav.improve'
+  | 'nav.dashboard'
+  | 'nav.timeline'
+  | 'nav.codingMoments'
+  | 'nav.output'
+  | 'nav.burndown'
+  | 'nav.patterns'
+  | 'nav.antiPatterns'
+  | 'nav.skillFinder'
+  | 'nav.contextHealth'
+  | 'nav.levelUp'
+  | 'nav.workspace'
+  | 'nav.current'
+  | 'nav.all'
+  | 'nav.searchWorkspaces'
+  | 'nav.harness'
+  | 'nav.allHarnesses';
 
 type DashboardKeys =
   | 'dashboard.funScore.mergeWizard'
