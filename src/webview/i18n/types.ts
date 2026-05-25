@@ -18,7 +18,8 @@ export type TranslationKey =
   | AntiPatternsKeys
   | OutputKeys
   | TimelineKeys
-  | PatternsKeys;
+  | PatternsKeys
+  | ContextMgmtKeys;
 
 type CommonKeys =
   | 'common.score.excellent'
@@ -158,3 +159,46 @@ type PatternsKeys =
   | 'patterns.noProjectData'
   | 'patterns.weekday'
   | 'patterns.weekend';
+
+type ContextMgmtKeys =
+  | 'contextMgmt.noSessionData'
+  | 'contextMgmt.noSessionDataDesc'
+  | 'contextMgmt.contextScore'
+  | 'contextMgmt.compactions'
+  | 'contextMgmt.utilizationTrend'
+  | 'contextMgmt.totalAvg'
+  | 'contextMgmt.perWorkspace'
+  | 'contextMgmt.trendDesc'
+  | 'contextMgmt.notEnoughData'
+  | 'contextMgmt.wsHealthTitle'
+  | 'contextMgmt.wsHealthDesc'
+  | 'contextMgmt.avgUtilizationPct'
+  | 'contextMgmt.utilizationPct'
+  | 'contextMgmt.degraded'
+  | 'contextMgmt.limited'
+  | 'contextMgmt.optimal'
+  | 'contextMgmt.loadingSessions'
+  | 'contextMgmt.sessions'
+  | 'contextMgmt.avgUtil'
+  | 'contextMgmt.saturation'
+  | 'contextMgmt.todoEvents'
+  | 'contextMgmt.date'
+  | 'contextMgmt.harness'
+  | 'contextMgmt.verdict'
+  | 'contextMgmt.reqs'
+  | 'contextMgmt.avgTokens'
+  | 'contextMgmt.avgTokensTooltip'
+  | 'contextMgmt.sat'
+  | 'contextMgmt.events'
+  | 'contextMgmt.tokenCurve'
+  | 'contextMgmt.insights'
+  | 'contextMgmt.noWorkspaces'
+  | 'contextMgmt.workspace'
+  | 'contextMgmt.score'
+  | 'contextMgmt.noTokenData'
+  | 'contextMgmt.sessionLevelOnly'
+  | 'contextMgmt.noPerTurnData'
+  | 'contextMgmt.tokenUsageTooltip'
+  | 'contextMgmt.compactionCountTooltip'
+  | 'contextMgmt.todoEventCountTooltip'
+  | 'contextMgmt.request';
