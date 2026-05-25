@@ -12,7 +12,8 @@ export type TranslationDict = {
 export type TranslationKey =
   | CommonKeys
   | LoadingKeys
-  | ErrorKeys;
+  | ErrorKeys
+  | DashboardKeys;
 
 type CommonKeys =
   | 'common.score.excellent'
@@ -23,7 +24,13 @@ type CommonKeys =
   | 'common.score.great'
   | 'common.sessions'
   | 'common.requests'
-  | 'common.noData';
+  | 'common.aiLoc'
+  | 'common.workspaces'
+  | 'common.noData'
+  | 'common.close'
+  | 'common.more'
+  | 'common.noIssuesDetected'
+  | 'common.linesOfCode';
 
 type LoadingKeys =
   | 'loading.buildingIndex'
@@ -45,3 +52,40 @@ type LoadingKeys =
 type ErrorKeys =
   | 'error.failedToRender'
   | 'error.reloadHint';
+
+type DashboardKeys =
+  | 'dashboard.funScore.mergeWizard'
+  | 'dashboard.funScore.shipGoblin'
+  | 'dashboard.funScore.vibeGremlin'
+  | 'dashboard.funScore.rubberDuck'
+  | 'dashboard.funScore.stackTrace'
+  | 'dashboard.vibesSampled'
+  | 'dashboard.calibrating'
+  | 'dashboard.antiPatternsSummary'
+  | 'dashboard.viewAllAntiPatterns'
+  | 'dashboard.skillFinder'
+  | 'dashboard.openFullView'
+  | 'dashboard.skillFinderDesc'
+  | 'dashboard.skillFinderPrompt'
+  | 'dashboard.scanForSkills'
+  | 'dashboard.dailyActivity'
+  | 'dashboard.topWorkspacesByRequests'
+  | 'dashboard.requestsByHarness'
+  | 'dashboard.activeWorkspaces'
+  | 'dashboard.customOpportunities'
+  | 'dashboard.communityMatches'
+  | 'dashboard.noneDetected'
+  | 'dashboard.noneMatched'
+  | 'dashboard.noSkillOpportunities'
+  | 'dashboard.openSkillFinder'
+  | 'dashboard.exploreSkillFinder'
+  | 'dashboard.scanningPromptHistory'
+  | 'dashboard.aiTriageInProgress'
+  | 'dashboard.matchingCatalog'
+  | 'dashboard.scanFailed'
+  | 'dashboard.tokenBannerTitle'
+  | 'dashboard.tokenBannerDesc'
+  | 'dashboard.findings'
+  | 'dashboard.finding'
+  | 'dashboard.repetitions'
+  | 'dashboard.loc';

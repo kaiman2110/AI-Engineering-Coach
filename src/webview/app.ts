@@ -379,7 +379,7 @@ function handleProgress(msg: { phase: number; detail?: string; pct: number; sess
 
   const sessEl = document.getElementById('loading-sessions');
   if (sessEl && msg.sessions && msg.sessions > 0) {
-    sessEl.textContent = `${msg.sessions.toLocaleString()} ${t('common.sessions')}`;
+    sessEl.textContent = `${msg.sessions.toLocaleString()} ${t('common.sessions').toLowerCase()}`;
   }
 
   // Update fun stats ticker (update values in-place, no re-render)
