@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { t, getLocale, setLocale } from './index';
+import { t, getLocale, setLocale, resolveLocale } from './index';
 import { en } from './en';
 import { ja } from './ja';
 
@@ -52,5 +52,24 @@ describe('i18n', () => {
     const jaKeys = Object.keys(ja);
     expect(enKeys.length).toBeGreaterThan(0);
     expect(new Set(enKeys)).toEqual(new Set(jaKeys));
+  });
+});
+
+describe('resolveLocale', () => {
+  it('returns exact match for supported locales', () => {
+    expect(resolveLocale('en')).toBe('en');
+    expect(resolveLocale('ja')).toBe('ja');
+  });
+
+  it('extracts language prefix from regional codes', () => {
+    expect(resolveLocale('ja-JP')).toBe('ja');
+    expect(resolveLocale('en-US')).toBe('en');
+    expect(resolveLocale('en-GB')).toBe('en');
+  });
+
+  it('falls back to English for unsupported locales', () => {
+    expect(resolveLocale('fr')).toBe('en');
+    expect(resolveLocale('zh-CN')).toBe('en');
+    expect(resolveLocale('')).toBe('en');
   });
 });

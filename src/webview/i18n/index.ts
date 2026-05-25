@@ -10,6 +10,7 @@ import { ja } from './ja';
 export type { Locale, TranslationKey };
 
 const dictionaries: Record<Locale, TranslationDict> = { en, ja };
+const supportedLocales = new Set<string>(Object.keys(dictionaries));
 
 let currentLocale: Locale = 'en';
 
@@ -19,6 +20,18 @@ export function getLocale(): Locale {
 
 export function setLocale(locale: Locale): void {
   currentLocale = locale;
+}
+
+export function resolveLocale(raw: string): Locale {
+  if (supportedLocales.has(raw)) return raw as Locale;
+  const prefix = raw.split('-')[0];
+  if (supportedLocales.has(prefix)) return prefix as Locale;
+  return 'en';
+}
+
+export function initLocaleFromDocument(): void {
+  const raw = document.documentElement.dataset.locale ?? 'en';
+  currentLocale = resolveLocale(raw);
 }
 
 export function t(key: TranslationKey): string {
