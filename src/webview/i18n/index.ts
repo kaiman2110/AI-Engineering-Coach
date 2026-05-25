@@ -6,6 +6,7 @@
 import type { Locale, TranslationDict, TranslationKey } from './types';
 import { en } from './en';
 import { ja } from './ja';
+import { ruleNamesJa, groupNamesJa, groupDescsJa } from './rules-ja';
 
 export type { Locale, TranslationKey };
 
@@ -36,4 +37,19 @@ export function initLocaleFromDocument(): void {
 
 export function t(key: TranslationKey): string {
   return dictionaries[currentLocale][key] ?? dictionaries.en[key] ?? key;
+}
+
+export function tRuleName(ruleId: string, fallback: string): string {
+  if (currentLocale === 'ja' && ruleNamesJa[ruleId]) return ruleNamesJa[ruleId];
+  return fallback;
+}
+
+export function tGroupName(group: string, fallback: string): string {
+  if (currentLocale === 'ja' && groupNamesJa[group]) return groupNamesJa[group];
+  return fallback;
+}
+
+export function tGroupDesc(group: string, fallback: string): string {
+  if (currentLocale === 'ja' && groupDescsJa[group]) return groupDescsJa[group];
+  return fallback;
 }

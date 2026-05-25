@@ -8,7 +8,7 @@
 import { DateFilter, PracticeGroup, PRACTICE_GROUPS } from '../core/types';
 import type { RuleSource } from '../core/types/rule-types';
 import { rpc, el, COLORS, scoreColor, scoreLabel } from './shared';
-import { t } from './i18n/index';
+import { t, tRuleName, tGroupName, tGroupDesc } from './i18n/index';
 import { html, render, type ComponentChildren, ScoreRing, PctBadge } from './render';
 import { consumeNavHint } from './app';
 import { renderCoverageHeatmap } from './page-antipatterns-heatmap';
@@ -256,7 +256,7 @@ export async function renderAntiPatterns(container: HTMLElement, currentFilter: 
       <div class="ap-score-grid">
         ${scores.map(g => {
           const color = scoreColor(g.score);
-          const name = PRACTICE_GROUPS[g.group];
+          const name = tGroupName(g.group, PRACTICE_GROUPS[g.group]);
           const series = apData.weeklyScores?.series.find(s => s.group === g.group);
           const spark = series ? sparklineSvg(series.scores, GROUP_COLORS[g.group]) : null;
           return html`
@@ -575,9 +575,9 @@ function renderFindings(
   for (const groupKey of allGroupKeys) {
     const gs = scores.find(s => s.group === groupKey);
     const groupPatterns = grouped.get(groupKey) || [];
-    const groupName = PRACTICE_GROUPS[groupKey];
+    const groupName = tGroupName(groupKey, PRACTICE_GROUPS[groupKey]);
     const groupColor = GROUP_COLORS[groupKey];
-    const groupDesc = GROUP_DESCS[groupKey];
+    const groupDesc = tGroupDesc(groupKey, GROUP_DESCS[groupKey]);
     const score = gs?.score ?? 100;
     const summaryColor = scoreColor(score);
 
@@ -924,7 +924,7 @@ function renderGroupedRuleCards(
   return html`${groups.map(group => {
     const groupRules = byGroup.get(group);
     if (!groupRules || groupRules.length === 0) return null;
-    const groupName = PRACTICE_GROUPS[group];
+    const groupName = tGroupName(group, PRACTICE_GROUPS[group]);
     const groupColor = GROUP_COLORS[group];
     const triggeredCount = groupRules.filter(r => previewMap.get(r.id)?.triggered).length;
 
@@ -961,7 +961,7 @@ function renderRuleCard(
     <div class="rule-card ${statusClass}" data-rule-id=${rule.id} data-tags=${rule.tags.join(',')} data-name=${rule.name.toLowerCase()} data-source=${rule.source}>
       <div class="rule-card-top">
         <div class="rule-card-name-row">
-          <span class="rule-card-name">${rule.name}</span>
+          <span class="rule-card-name">${tRuleName(rule.id, rule.name)}</span>
           ${severityBadge(rule.severity)}
           ${sourceBadge(rule.source)}
         </div>
@@ -1106,7 +1106,7 @@ function renderRuleDetailContent(rule: RuleDetail, preview: RulePreview | undefi
   return html`<div>
     <div class="rule-detail-top">
       <div class="rule-detail-name-row">
-        <h2>${rule.name}</h2>
+        <h2>${tRuleName(rule.id, rule.name)}</h2>
         ${severityBadge(rule.severity)}
         ${sourceBadge(rule.source)}
       </div>
