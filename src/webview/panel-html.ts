@@ -11,9 +11,10 @@ export function getDashboardHtml(webview: vscode.Webview, extensionUri: vscode.U
   const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'app.js'));
   const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'styles.css'));
   const nonce = getNonce();
+  const locale = vscode.env.language;
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${locale}" data-locale="${locale}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
