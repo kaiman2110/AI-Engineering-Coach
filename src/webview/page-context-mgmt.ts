@@ -9,6 +9,7 @@
 import { DateFilter, ContextManagementData, ContextVerdictThresholds, WorkspaceContextScore, WorkspaceContextSessionsData, SessionContextDetail } from '../core/types';
 import { rpc, COLORS, createChart, destroyChartById, formatNum, PALETTE } from './shared';
 import { html, render, StatCard, CanvasEl, ComponentChildren } from './render';
+import { t } from './i18n/index';
 
 const VERDICT_COLORS: Record<string, string> = {
   optimal: COLORS.green,
@@ -54,10 +55,9 @@ export async function renderContextManagement(container: HTMLElement, currentFil
     render(html`
       <div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
         <div style="font-size:40px;margin-bottom:12px;">&#128202;</div>
-        <div style="font-size:18px;margin-bottom:8px;">No Session Data</div>
+        <div style="font-size:18px;margin-bottom:8px;">${t('contextMgmt.noSessionData')}</div>
         <div style="max-width:420px;margin:0 auto;line-height:1.5;">
-          No sessions found for the selected time period.
-          Adjust the date filter or use AI coding tools to generate data.
+          ${t('contextMgmt.noSessionDataDesc')}
         </div>
       </div>`, container);
     return;
@@ -69,25 +69,25 @@ export async function renderContextManagement(container: HTMLElement, currentFil
   render(html`
     <div>
       <div class="stat-grid">
-        <${StatCard} label="Context Score" value=${data.overallScore + '/100'} accent=${scoreColor} />
-        <${StatCard} label="Compactions" value=${compactionLabel} accent=${data.totalCompactions > 10 ? COLORS.red : data.totalCompactions > 0 ? COLORS.yellow : COLORS.green} />
+        <${StatCard} label=${t('contextMgmt.contextScore')} value=${data.overallScore + '/100'} accent=${scoreColor} />
+        <${StatCard} label=${t('contextMgmt.compactions')} value=${compactionLabel} accent=${data.totalCompactions > 10 ? COLORS.red : data.totalCompactions > 0 ? COLORS.yellow : COLORS.green} />
       </div>
 
       ${renderTips(data.tips)}
 
       <h3 style="margin-top:24px;display:flex;align-items:center;gap:12px;">
-        Context Utilization Trend
+        ${t('contextMgmt.utilizationTrend')}
         ${data.workspaceTrend.length > 0 && data.trend.length > 1 ? html`
           <div id="ctxTrendToggle" style="display:inline-flex;border:1px solid var(--border-color, #30363d);border-radius:6px;overflow:hidden;font-size:11px;margin-left:auto;">
-            <button class="ctx-trend-mode active" data-mode="avg" style="padding:4px 10px;border:none;background:var(--list-active);color:var(--text-primary, #c9d1d9);cursor:pointer;font-size:11px;">Total Avg</button>
-            <button class="ctx-trend-mode" data-mode="workspace" style="padding:4px 10px;border:none;background:transparent;color:var(--text-muted, #8b949e);cursor:pointer;font-size:11px;">Per Workspace</button>
+            <button class="ctx-trend-mode active" data-mode="avg" style="padding:4px 10px;border:none;background:var(--list-active);color:var(--text-primary, #c9d1d9);cursor:pointer;font-size:11px;">${t('contextMgmt.totalAvg')}</button>
+            <button class="ctx-trend-mode" data-mode="workspace" style="padding:4px 10px;border:none;background:transparent;color:var(--text-muted, #8b949e);cursor:pointer;font-size:11px;">${t('contextMgmt.perWorkspace')}</button>
           </div>` : null}
       </h3>
-      <p style="color:var(--text-muted);font-size:12px;margin:4px 0 12px;">Weekly average context utilization (% of window) and compaction events over time.</p>
-      ${data.trend.length > 1 ? html`<${CanvasEl} id="ctxMgmtTrendChart" height=${280} />` : html`<div style="color:var(--text-muted);font-size:13px;padding:20px;">Not enough weekly data for trend chart.</div>`}
+      <p style="color:var(--text-muted);font-size:12px;margin:4px 0 12px;">${t('contextMgmt.trendDesc')}</p>
+      ${data.trend.length > 1 ? html`<${CanvasEl} id="ctxMgmtTrendChart" height=${280} />` : html`<div style="color:var(--text-muted);font-size:13px;padding:20px;">${t('contextMgmt.notEnoughData')}</div>`}
 
-      <h3 style="margin-top:24px;">Per-Workspace Context Session Health</h3>
-      <p style="color:var(--text-muted);font-size:12px;margin:4px 0 12px;">How efficiently each workspace manages its context window. Click a workspace to expand session-level details inline.</p>
+      <h3 style="margin-top:24px;">${t('contextMgmt.wsHealthTitle')}</h3>
+      <p style="color:var(--text-muted);font-size:12px;margin:4px 0 12px;">${t('contextMgmt.wsHealthDesc')}</p>
       <div id="ctxMgmtWsTable"></div>
     </div>
   `, container);
@@ -120,7 +120,7 @@ export async function renderContextManagement(container: HTMLElement, currentFil
           y: {
             beginAtZero: true,
             max: 100,
-            title: { display: true, text: 'Utilization %', color: '#8b949e' },
+            title: { display: true, text: t('contextMgmt.utilizationPct'), color: '#8b949e' },
             ticks: { color: '#8b949e' },
             grid: { color: 'rgba(48,54,61,0.6)' },
           },
@@ -135,12 +135,12 @@ export async function renderContextManagement(container: HTMLElement, currentFil
               warnLine: {
                 type: 'line', yMin: 50, yMax: 50,
                 borderColor: 'rgba(210,153,34,0.5)', borderWidth: 1, borderDash: [6, 4],
-                label: { display: true, content: `Degraded (${data.thresholds.optimalUtilization}%)`, position: 'start', backgroundColor: 'transparent', color: COLORS.yellow, font: { size: 10 } },
+                label: { display: true, content: `${t('contextMgmt.degraded')} (${data.thresholds.optimalUtilization}%)`, position: 'start', backgroundColor: 'transparent', color: COLORS.yellow, font: { size: 10 } },
               },
               dangerLine: {
                 type: 'line', yMin: data.thresholds.limitedUtilization, yMax: data.thresholds.limitedUtilization,
                 borderColor: 'rgba(248,81,73,0.5)', borderWidth: 1, borderDash: [6, 4],
-                label: { display: true, content: `Limited (${data.thresholds.limitedUtilization}%)`, position: 'start', backgroundColor: 'transparent', color: COLORS.red, font: { size: 10 } },
+                label: { display: true, content: `${t('contextMgmt.limited')} (${data.thresholds.limitedUtilization}%)`, position: 'start', backgroundColor: 'transparent', color: COLORS.red, font: { size: 10 } },
               },
             },
           },
@@ -157,7 +157,7 @@ export async function renderContextManagement(container: HTMLElement, currentFil
         labels: trendLabels,
         datasets: [
           {
-            label: 'Avg Utilization %',
+            label: t('contextMgmt.avgUtilizationPct'),
             data: data.trend.map(t => t.avgUtilization),
             borderColor: COLORS.blue,
             backgroundColor: gradientFill,
@@ -166,7 +166,7 @@ export async function renderContextManagement(container: HTMLElement, currentFil
             yAxisID: 'y',
           },
           {
-            label: 'Compactions',
+            label: t('contextMgmt.compactions'),
             data: data.trend.map(t => t.compactions),
             borderColor: '#6e7681',
             backgroundColor: 'rgba(110,118,129,0.25)',
@@ -181,14 +181,14 @@ export async function renderContextManagement(container: HTMLElement, currentFil
             position: 'left',
             beginAtZero: true,
             max: 100,
-            title: { display: true, text: 'Utilization %', color: '#8b949e' },
+            title: { display: true, text: t('contextMgmt.utilizationPct'), color: '#8b949e' },
             ticks: { color: '#8b949e' },
             grid: { color: 'rgba(48,54,61,0.6)' },
           },
           y1: {
             position: 'right',
             beginAtZero: true,
-            title: { display: true, text: 'Compactions', color: '#8b949e' },
+            title: { display: true, text: t('contextMgmt.compactions'), color: '#8b949e' },
             ticks: { color: '#8b949e', stepSize: 1 },
             grid: { drawOnChartArea: false },
           },
@@ -203,12 +203,12 @@ export async function renderContextManagement(container: HTMLElement, currentFil
               warnLine: {
                 type: 'line', yMin: data.thresholds.optimalUtilization, yMax: data.thresholds.optimalUtilization,
                 borderColor: 'rgba(210,153,34,0.5)', borderWidth: 1, borderDash: [6, 4],
-                label: { display: true, content: `Degraded (${data.thresholds.optimalUtilization}%)`, position: 'start', backgroundColor: 'transparent', color: COLORS.yellow, font: { size: 10 } },
+                label: { display: true, content: `${t('contextMgmt.degraded')} (${data.thresholds.optimalUtilization}%)`, position: 'start', backgroundColor: 'transparent', color: COLORS.yellow, font: { size: 10 } },
               },
               dangerLine: {
                 type: 'line', yMin: data.thresholds.limitedUtilization, yMax: data.thresholds.limitedUtilization,
                 borderColor: 'rgba(248,81,73,0.5)', borderWidth: 1, borderDash: [6, 4],
-                label: { display: true, content: `Limited (${data.thresholds.limitedUtilization}%)`, position: 'start', backgroundColor: 'transparent', color: COLORS.red, font: { size: 10 } },
+                label: { display: true, content: `${t('contextMgmt.limited')} (${data.thresholds.limitedUtilization}%)`, position: 'start', backgroundColor: 'transparent', color: COLORS.red, font: { size: 10 } },
               },
             },
           },
@@ -277,7 +277,7 @@ export async function renderContextManagement(container: HTMLElement, currentFil
           const parentRow = row;
           const loadingTr = document.createElement('tr');
           loadingTr.className = 'ctx-session-inline';
-          render(html`<td colspan="9" style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px;">Loading sessions...</td>`, loadingTr);
+          render(html`<td colspan="9" style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px;">${t('contextMgmt.loadingSessions')}</td>`, loadingTr);
           parentRow.after(loadingTr);
 
           const sessionData = await rpc<WorkspaceContextSessionsData>('getWorkspaceContextSessions', { workspaceId: wsId, filter: currentFilter });
@@ -318,12 +318,12 @@ export async function renderContextManagement(container: HTMLElement, currentFil
 
     render(html`<td colspan="9" style="padding:12px 16px;background:rgba(88,166,255,0.03);border-bottom:1px solid var(--border-color, #30363d);">
       <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-        <span style="font-size:12px;color:var(--text-muted);"><strong style="color:var(--text-primary, #c9d1d9);">${totalSessions}</strong> sessions</span>
-        <span style="font-size:12px;color:var(--text-muted);">Avg util: <strong style=${'color:' + contextColor(avgUtil, expandedSessionData.thresholds) + ';'}>${avgUtil.toFixed(1)}%</strong></span>
-        <span style="font-size:12px;color:var(--text-muted);">Saturation: <strong style=${'color:' + (avgSaturation > 30 ? COLORS.red : avgSaturation > 10 ? COLORS.yellow : COLORS.green) + ';'}>${avgSaturation.toFixed(1)}%</strong></span>
-        <span style="font-size:12px;color:var(--text-muted);">Compactions: <strong style=${'color:' + (totalCompactions > 0 ? COLORS.yellow : 'var(--text-primary, #c9d1d9)') + ';'}>${totalCompactions}</strong></span>
-        ${limitedCount > 0 ? html`<span style=${'font-size:12px;color:' + COLORS.red + ';'}><strong>${limitedCount}</strong> limited</span>` : null}
-        ${todoEvents > 0 ? html`<span style=${'font-size:12px;color:' + (COLORS.purple ?? COLORS.blue) + ';'}>${todoEvents} todo events</span>` : null}
+        <span style="font-size:12px;color:var(--text-muted);"><strong style="color:var(--text-primary, #c9d1d9);">${totalSessions}</strong> ${t('contextMgmt.sessions')}</span>
+        <span style="font-size:12px;color:var(--text-muted);">${t('contextMgmt.avgUtil')}: <strong style=${'color:' + contextColor(avgUtil, expandedSessionData.thresholds) + ';'}>${avgUtil.toFixed(1)}%</strong></span>
+        <span style="font-size:12px;color:var(--text-muted);">${t('contextMgmt.saturation')}: <strong style=${'color:' + (avgSaturation > 30 ? COLORS.red : avgSaturation > 10 ? COLORS.yellow : COLORS.green) + ';'}>${avgSaturation.toFixed(1)}%</strong></span>
+        <span style="font-size:12px;color:var(--text-muted);">${t('contextMgmt.compactions')}: <strong style=${'color:' + (totalCompactions > 0 ? COLORS.yellow : 'var(--text-primary, #c9d1d9)') + ';'}>${totalCompactions}</strong></span>
+        ${limitedCount > 0 ? html`<span style=${'font-size:12px;color:' + COLORS.red + ';'}><strong>${limitedCount}</strong> ${t('contextMgmt.limited').toLowerCase()}</span>` : null}
+        ${todoEvents > 0 ? html`<span style=${'font-size:12px;color:' + (COLORS.purple ?? COLORS.blue) + ';'}>${todoEvents} ${t('contextMgmt.todoEvents')}</span>` : null}
       </div>
     </td>`, summaryTr);
     parentRow.after(summaryTr);
@@ -336,15 +336,15 @@ export async function renderContextManagement(container: HTMLElement, currentFil
         <table style="width:100%;border-collapse:collapse;font-size:11px;">
           <thead>
             <tr style="border-bottom:1px solid var(--border-color, #30363d);color:var(--text-muted);">
-              <th style="text-align:left;padding:6px 10px;font-weight:600;">Date</th>
-              <th style="text-align:left;padding:6px 6px;font-weight:600;">Harness</th>
-              <th style="text-align:center;padding:6px 6px;font-weight:600;">Verdict</th>
-              <th style="text-align:right;padding:6px 6px;font-weight:600;">Reqs</th>
-              <th style="text-align:right;padding:6px 6px;font-weight:600;" title="Average native prompt tokens per request">Avg Tokens</th>
-              <th style="text-align:center;padding:6px 6px;font-weight:600;">Avg Util</th>
-              <th style="text-align:center;padding:6px 6px;font-weight:600;">Sat.</th>
-              <th style="text-align:center;padding:6px 6px;font-weight:600;">Events</th>
-              <th style="text-align:left;padding:6px 6px;font-weight:600;">Token Curve</th>
+              <th style="text-align:left;padding:6px 10px;font-weight:600;">${t('contextMgmt.date')}</th>
+              <th style="text-align:left;padding:6px 6px;font-weight:600;">${t('contextMgmt.harness')}</th>
+              <th style="text-align:center;padding:6px 6px;font-weight:600;">${t('contextMgmt.verdict')}</th>
+              <th style="text-align:right;padding:6px 6px;font-weight:600;">${t('contextMgmt.reqs')}</th>
+              <th style="text-align:right;padding:6px 6px;font-weight:600;" title=${t('contextMgmt.avgTokensTooltip')}>${t('contextMgmt.avgTokens')}</th>
+              <th style="text-align:center;padding:6px 6px;font-weight:600;">${t('contextMgmt.avgUtil')}</th>
+              <th style="text-align:center;padding:6px 6px;font-weight:600;">${t('contextMgmt.sat')}</th>
+              <th style="text-align:center;padding:6px 6px;font-weight:600;">${t('contextMgmt.events')}</th>
+              <th style="text-align:left;padding:6px 6px;font-weight:600;">${t('contextMgmt.tokenCurve')}</th>
             </tr>
           </thead>
           <tbody>
@@ -398,7 +398,7 @@ export async function renderContextManagement(container: HTMLElement, currentFil
         render(html`<td colspan="10" style="padding:12px 16px;background:rgba(22,27,34,0.6);border-bottom:1px solid var(--border-color, #30363d);">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
             <span style="font-size:12px;font-weight:600;color:var(--text-primary,#c9d1d9);">${s.date} — ${s.harness}</span>
-            <span style="font-size:11px;color:var(--text-muted);">${s.requestCount} reqs, ${s.compactionCount} compactions${todoEvents.length > 0 ? ', ' + todoEvents.length + ' todo events' : ''}</span>
+            <span style="font-size:11px;color:var(--text-muted);">${s.requestCount} ${t('contextMgmt.reqs')}, ${s.compactionCount} ${t('contextMgmt.compactions').toLowerCase()}${todoEvents.length > 0 ? ', ' + todoEvents.length + ' ' + t('contextMgmt.todoEvents') : ''}</span>
           </div>
           <div style="position:relative;height:180px;"><${CanvasEl} id=${chartId} height=${180} /></div>
         </td>`, chartRow);
@@ -557,7 +557,7 @@ function renderSessionTokenChart(chartId: string, s: SessionContextDetail, ctxWi
   createChart(chartId, 'line', {
     labels: utilData.map((_, i) => `R${i + 1}`),
     datasets: [{
-      label: 'Utilization %',
+      label: t('contextMgmt.utilizationPct'),
       data: utilData,
       borderColor: COLORS.blue,
       backgroundColor: gradientFill,
@@ -579,7 +579,7 @@ function renderSessionTokenChart(chartId: string, s: SessionContextDetail, ctxWi
       y: {
         beginAtZero: true,
         max: 100,
-        title: { display: true, text: 'Utilization %', color: '#8b949e' },
+        title: { display: true, text: t('contextMgmt.utilizationPct'), color: '#8b949e' },
         ticks: { color: '#8b949e' },
         grid: { color: 'rgba(48,54,61,0.6)' },
       },
@@ -596,7 +596,7 @@ function renderSessionTokenChart(chartId: string, s: SessionContextDetail, ctxWi
           title: (items: { dataIndex: number }[]) => {
             if (items.length === 0) return '';
             const i = items[0].dataIndex;
-            return `Request ${i + 1}`;
+            return `${t('contextMgmt.request')} ${i + 1}`;
           },
           afterTitle: (items: { dataIndex: number }[]) => {
             if (items.length === 0) return '';
@@ -607,8 +607,8 @@ function renderSessionTokenChart(chartId: string, s: SessionContextDetail, ctxWi
           label: (item: { parsed: { y: number | null }; dataIndex: number }) => {
             const val = item.parsed.y;
             const tokens = s.tokenCurve[item.dataIndex];
-            if (val == null || tokens == null) return 'no token data';
-            const zone = val >= thresholds.limitedUtilization ? 'limited' : val >= thresholds.optimalUtilization ? 'degraded' : 'optimal';
+            if (val == null || tokens == null) return t('contextMgmt.noTokenData');
+            const zone = val >= thresholds.limitedUtilization ? t('contextMgmt.limited').toLowerCase() : val >= thresholds.optimalUtilization ? t('contextMgmt.degraded').toLowerCase() : t('contextMgmt.optimal').toLowerCase();
             return `${val.toFixed(1)}% (${formatNum(tokens)} tokens) — ${zone}`;
           },
         },
@@ -621,7 +621,7 @@ function renderTips(tips: string[]): ComponentChildren {
   if (tips.length === 0) return null;
   return html`
     <div style="margin:16px 0;padding:14px 16px;border-radius:8px;background:rgba(88,166,255,0.06);border:1px solid rgba(88,166,255,0.2);">
-      <div style="font-weight:600;font-size:13px;margin-bottom:8px;color:${COLORS.blue};">Insights</div>
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;color:${COLORS.blue};">${t('contextMgmt.insights')}</div>
       ${tips.map(t => html`<div style="font-size:12px;color:var(--text-secondary, #8b949e);line-height:1.5;margin-bottom:4px;">• ${t}</div>`)}
     </div>`;
 }
@@ -630,7 +630,7 @@ const WS_PAGE_SIZE = 10;
 
 function renderWorkspaceTable(workspaces: WorkspaceContextScore[], page: number, thresholds: ContextVerdictThresholds): ComponentChildren {
   if (workspaces.length === 0) {
-    return html`<div style="color:var(--text-muted);font-size:13px;padding:20px;">No workspaces with token data found.</div>`;
+    return html`<div style="color:var(--text-muted);font-size:13px;padding:20px;">${t('contextMgmt.noWorkspaces')}</div>`;
   }
 
   const totalPages = Math.ceil(workspaces.length / WS_PAGE_SIZE);
@@ -653,14 +653,14 @@ function renderWorkspaceTable(workspaces: WorkspaceContextScore[], page: number,
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
         <thead>
           <tr style="border-bottom:1px solid var(--border-color, #30363d);color:var(--text-muted);">
-            <th style="text-align:left;padding:8px 12px;font-weight:600;">Workspace</th>
-            <th style="text-align:center;padding:8px 6px;font-weight:600;">Score</th>
-            <th style="text-align:center;padding:8px 6px;font-weight:600;">Verdict</th>
-            <th style="text-align:right;padding:8px 6px;font-weight:600;" title="Average native prompt tokens per request">Avg Tokens</th>
-            <th style="text-align:center;padding:8px 6px;font-weight:600;">Avg Util</th>
-            <th style="text-align:center;padding:8px 6px;font-weight:600;">Saturation</th>
-            <th style="text-align:center;padding:8px 6px;font-weight:600;">Compactions</th>
-            <th style="text-align:right;padding:8px 6px;font-weight:600;">Sessions</th>
+            <th style="text-align:left;padding:8px 12px;font-weight:600;">${t('contextMgmt.workspace')}</th>
+            <th style="text-align:center;padding:8px 6px;font-weight:600;">${t('contextMgmt.score')}</th>
+            <th style="text-align:center;padding:8px 6px;font-weight:600;">${t('contextMgmt.verdict')}</th>
+            <th style="text-align:right;padding:8px 6px;font-weight:600;" title=${t('contextMgmt.avgTokensTooltip')}>${t('contextMgmt.avgTokens')}</th>
+            <th style="text-align:center;padding:8px 6px;font-weight:600;">${t('contextMgmt.avgUtil')}</th>
+            <th style="text-align:center;padding:8px 6px;font-weight:600;">${t('contextMgmt.saturation')}</th>
+            <th style="text-align:center;padding:8px 6px;font-weight:600;">${t('contextMgmt.compactions')}</th>
+            <th style="text-align:right;padding:8px 6px;font-weight:600;">${t('contextMgmt.sessions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -716,18 +716,18 @@ function renderSessionRow(s: SessionContextDetail, ctxWindow: number, idx: numbe
   const compEvts = s.events.filter(e => e.type === 'compaction').length;
   const todoEvts = s.events.filter(e => e.type === 'todo-add' || e.type === 'todo-complete').length;
   const evtContent: ComponentChildren = compEvts > 0 || todoEvts > 0
-    ? html`<span>${compEvts > 0 ? html`<span style=${'color:' + COLORS.yellow + ';'} title=${compEvts + ' compaction(s)'}>${compEvts}C</span>` : null}${compEvts > 0 && todoEvts > 0 ? ' ' : ''}${todoEvts > 0 ? html`<span style=${'color:' + COLORS.blue + ';'} title=${todoEvts + ' todo event(s)'}>${todoEvts}T</span>` : null}</span>`
+    ? html`<span>${compEvts > 0 ? html`<span style=${'color:' + COLORS.yellow + ';'} title=${t('contextMgmt.compactionCountTooltip').replace('{0}', String(compEvts))}>${compEvts}C</span>` : null}${compEvts > 0 && todoEvts > 0 ? ' ' : ''}${todoEvts > 0 ? html`<span style=${'color:' + COLORS.blue + ';'} title=${t('contextMgmt.todoEventCountTooltip').replace('{0}', String(todoEvts))}>${todoEvts}T</span>` : null}</span>`
     : html`<span style="color:var(--text-muted);">-</span>`;
 
   const clickable = s.hasPerRequestTokens;
   const cursorStyle = clickable ? 'cursor:pointer;' : 'cursor:default;opacity:0.85;';
   const sparklineContent = clickable
     ? renderSparkline(s.tokenCurve, s.contextWindow || ctxWindow, thresholds)
-    : html`<span style="color:var(--text-muted);font-size:10px;" title="Session-level data only — no per-turn breakdown available">—</span>`;
+    : html`<span style="color:var(--text-muted);font-size:10px;" title=${t('contextMgmt.sessionLevelOnly')}>—</span>`;
 
   const utilContent = clickable
     ? utilBar(s.avgUtilization)
-    : html`<span style="color:var(--text-muted);" title="No per-turn token data">—</span>`;
+    : html`<span style="color:var(--text-muted);" title=${t('contextMgmt.noPerTurnData')}>—</span>`;
   const satContent = clickable
     ? html`<span style=${'color:' + satColor + ';font-weight:' + (s.saturation > 10 ? '600' : '400') + ';'}>${s.saturation.toFixed(1)}%</span>`
     : html`<span style="color:var(--text-muted);">—</span>`;
@@ -784,7 +784,7 @@ function renderSessionRow(s: SessionContextDetail, ctxWindow: number, idx: numbe
   const lastX = points[points.length - 1].x;
   const fillPath = `M${firstX.toFixed(1)},${height} ${points.map(p => `L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} L${lastX.toFixed(1)},${height} Z`;
 
-  return html`<svg width=${width} height=${height} style="vertical-align:middle;" title=${'Token usage across ' + validValues.length + ' of ' + tokenCurve.length + ' requests'}>
+  return html`<svg width=${width} height=${height} style="vertical-align:middle;" title=${t('contextMgmt.tokenUsageTooltip').replace('{0}', String(validValues.length)).replace('{1}', String(tokenCurve.length))}>
     <path d=${fillPath} fill=${color} fill-opacity="0.15"/>
     <polyline points=${pointsStr} fill="none" stroke=${color} stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
   </svg>`;

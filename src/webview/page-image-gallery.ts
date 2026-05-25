@@ -9,6 +9,7 @@ import type { DateFilter } from '../core/types';
 import type { ImageGalleryData, ImageMoment, ImageStory } from '../core/analyzer-images';
 import { rpc } from './shared';
 import { html, render, type ComponentChildren } from './render';
+import { t } from './i18n/index';
 
 
 
@@ -84,15 +85,15 @@ const PAGE_SIZE = 30;
 const IMAGE_PREFETCH_BATCH_SIZE = 8;
 
 export async function renderImageGallery(container: HTMLElement, currentFilter: DateFilter): Promise<void> {
-  renderImageGalleryLoading(container, 'Finding coding moments...', 0, 0);
+  renderImageGalleryLoading(container, t('gallery.findingMoments'), 0, 0);
   const data = await rpc<ImageGalleryData>('getImageGallery', currentFilter as Record<string, unknown>);
 
   if (!data || data.moments.length === 0) {
     render(html`
       <div class="page-empty">
         <div class="page-empty-icon"><svg width="48" height="48" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1" opacity="0.4"/><circle cx="5.5" cy="6.5" r="1.2" stroke="currentColor" stroke-width="0.8" opacity="0.4"/><path d="M2 11l3-3 2 2 4-4 3 3" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/></svg></div>
-        <h2>No Coding Moments Yet</h2>
-        <p class="text-muted">Start using screenshots and images in your AI coding sessions to see them here.</p>
+        <h2>${t('gallery.noMomentsTitle')}</h2>
+        <p class="text-muted">${t('gallery.noMomentsDesc')}</p>
       </div>`, container);
     return;
   }
@@ -134,7 +135,7 @@ export async function renderImageGallery(container: HTMLElement, currentFilter: 
       const img = document.createElement('img');
       img.src = images[0];
       img.className = 'img-card-img';
-      img.alt = 'Screenshot';
+      img.alt = t('gallery.screenshot');
       el.textContent = '';
       el.appendChild(img);
     }
@@ -184,7 +185,7 @@ export async function renderImageGallery(container: HTMLElement, currentFilter: 
         }
 
         if (batch.length === 0) break;
-        if (showInitialLoading) renderImageGalleryLoading(container, 'Loading screenshots...', checked, base.length);
+        if (showInitialLoading) renderImageGalleryLoading(container, t('gallery.loadingScreenshots'), checked, base.length);
         await Promise.all(batch.map(m => loadImages(m.sessionId, m.id)));
         checked += batch.length;
         confirmed = base.filter(m => confirmedImageSet.has(m.id)).length;
@@ -228,8 +229,8 @@ export async function renderImageGallery(container: HTMLElement, currentFilter: 
         </div>
         ${filtered.length === 0 && !canLoadMore() ? html`
           <div class="page-empty">
-            <h2>No Loadable Images Found</h2>
-            <p class="text-muted">These sessions referenced images, but the raw screenshots could not be loaded.</p>
+            <h2>${t('gallery.noLoadableTitle')}</h2>
+            <p class="text-muted">${t('gallery.noLoadableDesc')}</p>
           </div>` : null}
         ${canLoadMore()
           ? html`<div class="img-load-more" id="img-sentinel"><div class="loading-spinner" style="margin:20px auto;"></div></div>`
@@ -268,7 +269,7 @@ export async function renderImageGallery(container: HTMLElement, currentFilter: 
   }
 
   async function loadMoreAndRender(showLoading = false): Promise<void> {
-    if (showLoading) renderImageGalleryLoading(container, 'Loading screenshots...', 0, getFilterBase().length);
+    if (showLoading) renderImageGalleryLoading(container, t('gallery.loadingScreenshots'), 0, getFilterBase().length);
     await discoverImagesUntil(visibleCount, showLoading);
     rerenderPage();
   }
@@ -356,12 +357,12 @@ function renderImageGalleryLoading(container: HTMLElement, label: string, checke
       <div class="img-loading-screen">
         <div class="loading-spinner"></div>
         <h2>${label}</h2>
-        <p class="text-muted">Preparing screenshots for the gallery.</p>
+        <p class="text-muted">${t('gallery.preparingScreenshots')}</p>
         ${total > 0 ? html`
           <div class="progress-bar-track img-loading-progress">
             <div class="progress-bar-fill" style=${`width:${pct}%`}></div>
           </div>
-          <div class="img-loading-count">${checked} / ${total} checked</div>
+          <div class="img-loading-count">${t('gallery.checkedProgress').replace('{0}', String(checked)).replace('{1}', String(total))}</div>
         ` : null}
       </div>
     </div>`, container);
@@ -372,8 +373,8 @@ function renderImageGalleryLoading(container: HTMLElement, label: string, checke
 function renderHeader(_data: ImageGalleryData): ComponentChildren {
   return html`
     <div class="img-header">
-      <h1>\uD83D\uDC95 Coding Moments</h1>
-      <p class="img-header-slogan">Relive the screenshots that shaped your code</p>
+      <h1>${t('gallery.title')}</h1>
+      <p class="img-header-slogan">${t('gallery.subtitle')}</p>
     </div>`;
 }
 
@@ -393,7 +394,7 @@ function renderStoryReels(
         return html`
           <button class="img-reel-circle"
                   onClick=${() => playStory(s)}
-                  title=${`${shortWorkspace(s.workspace)} - ${s.totalImages} images`}>
+                  title=${t('gallery.storyTooltip').replace('{0}', shortWorkspace(s.workspace)).replace('{1}', String(s.totalImages))}>
             <div class="img-reel-ring" style=${`--ring-hue: ${hue};`}>
               <div class="img-reel-avatar" style=${`background: linear-gradient(135deg, hsl(${hue}, 50%, 30%), hsl(${hue + 40}, 40%, 20%));`}>
                 <span class="img-reel-count">${s.totalImages}</span>
@@ -420,7 +421,7 @@ function renderWorkspaceFilter(
     <div class="img-ws-filter">
       <button class=${`img-ws-pill ${filter === 'all' ? 'active' : ''}`}
               onClick=${() => setFilter('all')}>
-        All <span class="img-ws-pill-count">${allMoments.length}</span>
+        ${t('gallery.all')} <span class="img-ws-pill-count">${allMoments.length}</span>
       </button>
       ${shown.map(ws => {
         const count = allMoments.filter(m => m.workspace === ws).length;
@@ -480,7 +481,7 @@ function setupLazyImages(
           const img = document.createElement('img');
           img.src = images[0];
           img.className = 'img-card-img';
-          img.alt = 'Screenshot';
+          img.alt = t('gallery.screenshot');
           img.loading = 'lazy';
           el.textContent = '';
           el.appendChild(img);
@@ -501,7 +502,7 @@ function setupLazyImages(
 /* ── Helpers ─────────────────────────────────────────────────── */
 
 function shortWorkspace(ws: string): string {
-  if (!ws) return 'Unknown';
+  if (!ws) return t('gallery.unknown');
   const parts = ws.replaceAll('\\', '/').split('/');
   return parts[parts.length - 1] || ws;
 }

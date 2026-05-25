@@ -10,6 +10,7 @@ import { FF_TOKEN_REPORTING_ENABLED } from '../core/constants';
 
 import { rpc, createChart, destroyChartById, COLORS, formatNum, vscode } from './shared';
 import { html, render, CanvasEl, StatCard } from './render';
+import { t } from './i18n/index';
 
 interface AiCreditBdData {
   dayOfMonth: number;
@@ -50,13 +51,13 @@ function ExtraInfo({ bd }: { bd: AiCreditBdData }) {
   const trulyMissing = bd.finalizableRequests - bd.countedRequests - bd.partialRequests;
   return html`
     <p>
-      ${bd.daysUntilExhaustion != null && html`<strong>Days to exhaustion:</strong> ${bd.daysUntilExhaustion} | `}
-      <strong>Safe daily budget:</strong> ${formatNum(Math.round(bd.safeDailyBudget))} tokens/day |${' '}
-      ${bd.projectedOverage > 0 && html`<strong>Projected overage:</strong> ${formatNum(Math.round(bd.projectedOverage))} tokens | `}
-      ${bd.finalizableRequests > 0 && bd.missingPct > 0 && html` <span class="missing-badge" title=${trulyMissing + ' of ' + bd.finalizableRequests + ' finalizable requests have no token data and were not counted.'}>missing ${bd.missingPct}%</span>`}
-      ${bd.partialRequests > 0 && html` <span class="pending-badge" title=${bd.partialRequests + ' output-only requests in this period (excluded from missing %)'}>+${bd.partialRequests} partial</span>`}
-      ${bd.pendingRequests > 0 && html` <span class="pending-badge" title=${bd.pendingRequests + ' requests in active/aborted sessions (excluded from missing %)'}>+${bd.pendingRequests} pending</span>`}
-      ${bd.noDataRequests > 0 && html` <span class="pending-badge" title=${bd.noDataRequests + ' requests where the harness/source did not record token data (excluded from missing %)'}>+${bd.noDataRequests} no-data</span>`}
+      ${bd.daysUntilExhaustion != null && html`<strong>${t('burndown.daysToExhaustion')}</strong> ${bd.daysUntilExhaustion} | `}
+      <strong>${t('burndown.safeDailyBudget')}</strong> ${formatNum(Math.round(bd.safeDailyBudget))} tokens/day |${' '}
+      ${bd.projectedOverage > 0 && html`<strong>${t('burndown.projectedOverage')}</strong> ${formatNum(Math.round(bd.projectedOverage))} tokens | `}
+      ${bd.finalizableRequests > 0 && bd.missingPct > 0 && html` <span class="missing-badge" title=${t('burndown.finalizableTooltip').replace('{0}', String(trulyMissing)).replace('{1}', String(bd.finalizableRequests))}>${t('burndown.missing')} ${bd.missingPct}%</span>`}
+      ${bd.partialRequests > 0 && html` <span class="pending-badge" title=${t('burndown.partialTooltip').replace('{0}', String(bd.partialRequests))}>+${bd.partialRequests} partial</span>`}
+      ${bd.pendingRequests > 0 && html` <span class="pending-badge" title=${t('burndown.pendingTooltip').replace('{0}', String(bd.pendingRequests))}>+${bd.pendingRequests} pending</span>`}
+      ${bd.noDataRequests > 0 && html` <span class="pending-badge" title=${t('burndown.noDataTooltip').replace('{0}', String(bd.noDataRequests))}>+${bd.noDataRequests} no-data</span>`}
     </p>
   `;
 }
@@ -122,15 +123,10 @@ async function loadModelBudgetsFromDisk(): Promise<void> {
 export function renderBurndown(container: HTMLElement, currentFilter: DateFilter): void {
   if (!FF_TOKEN_REPORTING_ENABLED) {
     render(html`
-      <h1>Burndown</h1>
+      <h1>${t('burndown.title')}</h1>
       <div class="feature-gated-notice">
-        <h2>Burndown is temporarily disabled</h2>
-        <p>
-          This feature has been disabled temporarily until we are able to verify
-          that the reporting is aligned with what is reported by GitHub.
-          It will be re-enabled once the billing system is active and numbers
-          can be validated.
-        </p>
+        <h2>${t('burndown.disabledTitle')}</h2>
+        <p>${t('burndown.disabledDesc')}</p>
       </div>
     `, container);
     return;
@@ -193,7 +189,7 @@ export function renderBurndown(container: HTMLElement, currentFilter: DateFilter
 
     // Auto-discover models on first render
     if (!modelsLoaded) {
-      render(html`<div class="budget-loading">Loading models\u2026</div>`, target);
+      render(html`<div class="budget-loading">${t('burndown.loadingModels')}</div>`, target);
       fetchHistoricalBudgets().then(peak => {
         discoveredModels = peak;
         modelsLoaded = true;
@@ -220,8 +216,8 @@ export function renderBurndown(container: HTMLElement, currentFilter: DateFilter
     render(html`
       <div class="budget-header">
         <div class="stat-grid" style="margin-bottom:0;">
-          <${StatCard} label="Total Monthly Budget" value=${formatNum(totalBudget) + ' tokens'} accent="var(--accent-blue)" />
-          <${StatCard} label="Models with Budget" value=${configuredCount + ' / ' + sortedModels.length} accent="var(--accent-green)" />
+          <${StatCard} label=${t('burndown.totalBudget')} value=${formatNum(totalBudget) + ' ' + t('burndown.tokens')} accent="var(--accent-blue)" />
+          <${StatCard} label=${t('burndown.modelsWithBudget')} value=${configuredCount + ' / ' + sortedModels.length} accent="var(--accent-green)" />
         </div>
       </div>
 
@@ -232,30 +228,26 @@ export function renderBurndown(container: HTMLElement, currentFilter: DateFilter
           }
           saveModelBudgets();
           renderBudgetTab();
-        }}>Auto-fill (+20% of peak)</button>
+        }}>${t('burndown.autoFill')}</button>
         <button class="dash-scan-btn budget-clear-btn" onClick=${() => {
           for (const k of Object.keys(modelBudgets)) modelBudgets[k] = 0;
           saveModelBudgets();
           renderBudgetTab();
-        }}>Clear all</button>
+        }}>${t('burndown.clearAll')}</button>
         <button class="dash-scan-btn" onClick=${() => {
           activeBurndownTab = 'chart';
           renderTabs();
           renderBurndownChartLater(renderBurndownChart);
-        }}>Apply to Burndown \u2192</button>
+        }}>${t('burndown.applyToBurndown')}</button>
       </div>
 
-      <p class="budget-hint">
-        Models are auto-discovered from your usage history.
-        <strong>Peak usage</strong> shows the highest monthly consumption across the last 4 months.
-        Use <strong>Auto-fill</strong> to set budgets at peak + 20% buffer.
-      </p>
+      <p class="budget-hint">${t('burndown.budgetHint')}</p>
 
       <table class="data-table budget-table" id="budgetTable">
         <thead><tr>
-          <th>Model</th>
-          <th class="budget-usage-col">Peak Usage</th>
-          <th class="budget-col">Monthly Budget (tokens)</th>
+          <th>${t('burndown.model')}</th>
+          <th class="budget-usage-col">${t('burndown.peakUsage')}</th>
+          <th class="budget-col">${t('burndown.monthlyBudget')}</th>
         </tr></thead>
         <tbody>
           ${sortedModels.map(model => {
@@ -284,7 +276,7 @@ export function renderBurndown(container: HTMLElement, currentFilter: DateFilter
                     const newCount = Object.values(modelBudgets).filter(x => x > 0).length;
                     const totalEl = target.querySelector('.stat-grid .stat-card:first-child .stat-value');
                     const countEl = target.querySelector('.stat-grid .stat-card:last-child .stat-value');
-                    if (totalEl) totalEl.textContent = formatNum(newTotal) + ' tokens';
+                    if (totalEl) totalEl.textContent = formatNum(newTotal) + ' ' + t('burndown.tokens');
                     if (countEl) countEl.textContent = newCount + ' / ' + sortedModels.length;
                     const row = (e.target as HTMLElement).closest('tr');
                     if (row) row.classList.toggle('budget-row-active', v > 0);
@@ -308,23 +300,20 @@ export function renderBurndown(container: HTMLElement, currentFilter: DateFilter
       const target = document.getElementById('burndown-tab-content')!;
       render(html`
         <div class="approximation-notice">
-          <strong>Approximation only.</strong>
-          This shows token consumption across all harnesses and may not be fully
-          accurate. It cannot reflect activity on other devices, cloud-hosted
-          agents, or harnesses this extension doesn't ingest.
-          Use it as a workflow optimization signal, not as a billing reference.
+          <strong>${t('burndown.approximationTitle')}</strong>
+          ${t('burndown.approximationDesc')}
         </div>
         <div class="burndown-controls">
           <div class="month-nav">
-            <button id="prevMonth" title="Previous month" onClick=${() => navigateMonth(-1)}>\u2190</button>
+            <button id="prevMonth" title=${t('burndown.prevMonth')} onClick=${() => navigateMonth(-1)}>\u2190</button>
             <span id="monthLabel">${formatMonthLabel(selectedYear, selectedMonth)}</span>
-            <button id="nextMonth" title="Next month" disabled onClick=${() => navigateMonth(1)}>\u2192</button>
+            <button id="nextMonth" title=${t('burndown.nextMonth')} disabled onClick=${() => navigateMonth(1)}>\u2192</button>
           </div>
           <select id="modelFilter" class="burndown-model-select" onChange=${() => {
             selectedBurndownModel = (document.getElementById('modelFilter') as HTMLSelectElement).value;
             renderBurndownChartLater(renderBurndownChart);
           }}>
-            <option value="all" selected=${selectedBurndownModel === 'all'}>All Models</option>
+            <option value="all" selected=${selectedBurndownModel === 'all'}>${t('burndown.allModels')}</option>
           </select>
         </div>
         <${CanvasEl} id="burndownChart" height=${350} />
@@ -335,10 +324,10 @@ export function renderBurndown(container: HTMLElement, currentFilter: DateFilter
   }
 
   render(html`
-    <h1>Burndown</h1>
+    <h1>${t('burndown.title')}</h1>
     <div class="tab-bar" id="burndown-tabs">
-      <button class=${`tab${activeBurndownTab === 'chart' ? ' active' : ''}`} data-tab="chart">Burndown Chart</button>
-      <button class=${`tab${activeBurndownTab === 'budget' ? ' active' : ''}`} data-tab="budget">Token Budget</button>
+      <button class=${`tab${activeBurndownTab === 'chart' ? ' active' : ''}`} data-tab="chart">${t('burndown.chartTab')}</button>
+      <button class=${`tab${activeBurndownTab === 'budget' ? ' active' : ''}`} data-tab="budget">${t('burndown.budgetTab')}</button>
     </div>
     <div id="burndown-tab-content"></div>
   `, container);
@@ -375,7 +364,7 @@ export function renderBurndown(container: HTMLElement, currentFilter: DateFilter
       const prevVal = selectedBurndownModel;
       filterSelect.innerHTML = '';
       const allOpt = document.createElement('option');
-      allOpt.value = 'all'; allOpt.textContent = 'All Models';
+      allOpt.value = 'all'; allOpt.textContent = t('burndown.allModels');
       filterSelect.appendChild(allOpt);
       const sortedModels = Object.entries(bd.byModel)
         .sort((a, b) => (b[1].cumulative[bd.dayOfMonth - 1] || 0) - (a[1].cumulative[bd.dayOfMonth - 1] || 0));
@@ -532,7 +521,7 @@ export function renderBurndown(container: HTMLElement, currentFilter: DateFilter
     if (bd.status === 'no-data' || bd.status === 'pending-only') {
       render(html`
         <div class="burndown-info status-nodata">
-          <p><strong>Status:</strong> ${bd.status} \u2014 ${bd.status === 'pending-only' ? 'all requests in this period are still pending.' : 'no native token data available for this period.'}</p>
+          <p><strong>${t('burndown.statusLabel')}</strong> ${bd.status} \u2014 ${bd.status === 'pending-only' ? t('burndown.pendingOnly') : t('burndown.noNativeData')}</p>
           <${ExtraInfo} bd=${bd} />
           <p>${bd.recommendation}</p>
         </div>
@@ -568,14 +557,14 @@ export function renderBurndown(container: HTMLElement, currentFilter: DateFilter
         <div class=${'burndown-info ' + statusClass}>
           <p>
             <strong>${selectedBurndownModel}</strong> |
-            <strong>Status:</strong> ${modelStatus} |
-            <strong>Consumed:</strong> ${formatNum(Math.round(used))} tokens${modelBudget > 0 ? ` / ${formatNum(modelBudget)}` : ''}${modelBudget > 0 ? ` (${pct}%)` : ''}${isPartial && html` <span class="missing-badge">lower bound</span>`} |
-            <strong>Projected:</strong> ${formatNum(modelProjected)} tokens
+            <strong>${t('burndown.statusLabel')}</strong> ${modelStatus} |
+            <strong>${t('burndown.consumed')}</strong> ${formatNum(Math.round(used))} tokens${modelBudget > 0 ? ` / ${formatNum(modelBudget)}` : ''}${modelBudget > 0 ? ` (${pct}%)` : ''}${isPartial && html` <span class="missing-badge">${t('burndown.lowerBound')}</span>`} |
+            <strong>${t('burndown.projected')}</strong> ${formatNum(modelProjected)} tokens
           </p>
           ${modelBudget > 0 && html`<p>
-            ${modelDaysToExhaustion != null && html`<strong>Days to exhaustion:</strong> ${modelDaysToExhaustion} | `}
-            <strong>Safe daily budget:</strong> ${formatNum(modelSafeDailyBudget)} tokens/day
-            ${modelOverage > 0 && html` | <strong>Projected overage:</strong> ${formatNum(modelOverage)} tokens`}
+            ${modelDaysToExhaustion != null && html`<strong>${t('burndown.daysToExhaustion')}</strong> ${modelDaysToExhaustion} | `}
+            <strong>${t('burndown.safeDailyBudget')}</strong> ${formatNum(modelSafeDailyBudget)} tokens/day
+            ${modelOverage > 0 && html` | <strong>${t('burndown.projectedOverage')}</strong> ${formatNum(modelOverage)} tokens`}
           </p>`}
         </div>
       `, statusEl);
@@ -605,9 +594,9 @@ export function renderBurndown(container: HTMLElement, currentFilter: DateFilter
       render(html`
         <div class=${'burndown-info ' + statusClass}>
           <p>
-            <strong>Status:</strong> ${bd.status} |
-            <strong>Consumed:</strong> ${formatNum(Math.round(bd.consumed))} tokens${bd.budget > 0 ? ` / ${formatNum(bd.budget)}` : ''}${isPartial && html` <span class="missing-badge">lower bound</span>`} |
-            <strong>Projected:</strong> ${formatNum(Math.round(bd.projected))} tokens
+            <strong>${t('burndown.statusLabel')}</strong> ${bd.status} |
+            <strong>${t('burndown.consumed')}</strong> ${formatNum(Math.round(bd.consumed))} tokens${bd.budget > 0 ? ` / ${formatNum(bd.budget)}` : ''}${isPartial && html` <span class="missing-badge">${t('burndown.lowerBound')}</span>`} |
+            <strong>${t('burndown.projected')}</strong> ${formatNum(Math.round(bd.projected))} tokens
           </p>
           ${modelRows.length > 0 && html`<div class="model-budget-status">${modelRows}</div>`}
           <${ExtraInfo} bd=${bd} />
