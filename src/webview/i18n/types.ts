@@ -19,7 +19,8 @@ export type TranslationKey =
   | OutputKeys
   | TimelineKeys
   | PatternsKeys
-  | ContextMgmtKeys;
+  | ContextMgmtKeys
+  | SkillsKeys;
 
 type CommonKeys =
   | 'common.score.excellent'
@@ -202,3 +203,62 @@ type ContextMgmtKeys =
   | 'contextMgmt.compactionCountTooltip'
   | 'contextMgmt.todoEventCountTooltip'
   | 'contextMgmt.request';
+
+type SkillsKeys =
+  | 'skills.title'
+  | 'skills.subtitle'
+  | 'skills.workspace'
+  | 'skills.allWorkspaces'
+  | 'skills.lookBack'
+  | 'skills.month1'
+  | 'skills.months3'
+  | 'skills.months6'
+  | 'skills.months12'
+  | 'skills.allTime'
+  | 'skills.analyze'
+  | 'skills.analyzing'
+  | 'skills.customTitle'
+  | 'skills.customEmpty'
+  | 'skills.communityTitle'
+  | 'skills.communityDescPrefix'
+  | 'skills.communityDescSuffix'
+  | 'skills.communityEmpty'
+  | 'skills.scanning'
+  | 'skills.loadingCatalog'
+  | 'skills.noPatterns'
+  | 'skills.noPatternsToMatch'
+  | 'skills.patternsFound'
+  | 'skills.noStrongOpportunities'
+  | 'skills.noRepeatingTasks'
+  | 'skills.noRepeatingTasksDetailed'
+  | 'skills.opportunitiesFound'
+  | 'skills.fromDashboard'
+  | 'skills.patternsNoStrong'
+  | 'skills.noCommunityMatches'
+  | 'skills.allDismissed'
+  | 'skills.dismiss'
+  | 'skills.repetitions'
+  | 'skills.sessions'
+  | 'skills.cancelled'
+  | 'skills.installSkill'
+  | 'skills.generating'
+  | 'skills.preview'
+  | 'skills.saveInstall'
+  | 'skills.cancel'
+  | 'skills.installed'
+  | 'skills.skillInstalled'
+  | 'skills.reviewBelow'
+  | 'skills.error'
+  | 'skills.noCatalogItems'
+  | 'skills.aiReviewing'
+  | 'skills.noCommunityMatch'
+  | 'skills.aiTriageFailed'
+  | 'skills.catalogError'
+  | 'skills.curatedFrom'
+  | 'skills.fetching'
+  | 'skills.installedAs'
+  | 'skills.install'
+  | 'skills.kindSkill'
+  | 'skills.kindAgent'
+  | 'skills.kindInstruction'
+  | 'skills.kindHook';

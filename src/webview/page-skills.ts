@@ -10,6 +10,7 @@ import { rpc, COLORS } from './shared';
 import { html, render } from './render';
 import { consumeNavHint, updateNavBadge } from './app';
 import { getSkillCache, setSkillCache } from './skill-cache';
+import { t } from './i18n/index';
 
 const CATALOG_BASE = 'https://awesome-copilot.github.com';
 
@@ -36,54 +37,54 @@ export async function renderSkills(container: HTMLElement, currentFilter: DateFi
 
   render(html`
     <div class="sk-header">
-      <h1>Skill Finder</h1>
-      <p class="sk-subtitle">Analyze your repeated prompts to discover custom skill opportunities and matching community skills.</p>
+      <h1>${t('skills.title')}</h1>
+      <p class="sk-subtitle">${t('skills.subtitle')}</p>
     </div>
 
     <div class="sk-toolbar">
       <div class="sk-toolbar-row">
         <label class="sk-lookback">
-          <span>Workspace</span>
+          <span>${t('skills.workspace')}</span>
           <select id="skWorkspaceSelect" class="sk-select">
-            <option value="">All workspaces</option>
+            <option value="">${t('skills.allWorkspaces')}</option>
             ${workspaces.map(ws => html`<option value="${ws.id}" selected="${ws.id === filterWsId || undefined}">${ws.name}</option>`)}
           </select>
         </label>
       </div>
       <div class="sk-toolbar-row">
         <label class="sk-lookback">
-          <span>Look back</span>
+          <span>${t('skills.lookBack')}</span>
           <select id="lookbackSelect" class="sk-select">
-            <option value="1">1 month</option>
-            <option value="3">3 months</option>
-            <option value="6" selected>6 months</option>
-            <option value="12">12 months</option>
-            <option value="0">All time</option>
+            <option value="1">${t('skills.month1')}</option>
+            <option value="3">${t('skills.months3')}</option>
+            <option value="6" selected>${t('skills.months6')}</option>
+            <option value="12">${t('skills.months12')}</option>
+            <option value="0">${t('skills.allTime')}</option>
           </select>
         </label>
       </div>
       <div class="sk-toolbar-row">
-        <button id="analyzeBtn" class="sk-btn sk-btn-primary">Analyze</button>
+        <button id="analyzeBtn" class="sk-btn sk-btn-primary">${t('skills.analyze')}</button>
         <span id="analyzeStatus" class="sk-status"></span>
       </div>
     </div>
 
     <section class="sk-section" id="customSection">
-      <h2 class="sk-section-title">Custom Skill Opportunities</h2>
+      <h2 class="sk-section-title">${t('skills.customTitle')}</h2>
       <div id="customResults">
-        <p class="sk-empty">Select a workspace and click Analyze to find repeated patterns that could become skills.</p>
+        <p class="sk-empty">${t('skills.customEmpty')}</p>
       </div>
     </section>
 
     <section class="sk-section" id="catalogSection">
-      <h2 class="sk-section-title">Community Skills & Agents</h2>
+      <h2 class="sk-section-title">${t('skills.communityTitle')}</h2>
       <p class="sk-section-desc">
-        Matching picks from${' '}
+        ${t('skills.communityDescPrefix')}${' '}
         <a href="${CATALOG_BASE}/" target="_blank">awesome-copilot</a>
-        ${' '}based on your repeated activities.
+        ${' '}${t('skills.communityDescSuffix')}
       </p>
       <div id="catalogResults">
-        <p class="sk-empty">Run the analysis to get personalized community recommendations.</p>
+        <p class="sk-empty">${t('skills.communityEmpty')}</p>
       </div>
     </section>
   `, container);
@@ -112,16 +113,16 @@ function renderCachedResults(clusters: WorkflowCluster[], triaged: TriagedCluste
   const catalogEl = document.getElementById('catalogResults')!;
 
   // Custom skills
-  const strong = triaged.filter(t => t.verdict === 'strong').slice(0, 10);
+  const strong = triaged.filter(tr => tr.verdict === 'strong').slice(0, 10);
   lastTriaged = strong;
   lastClusters = clusters;
   lastResultsEl = customEl;
 
   if (strong.length === 0) {
-    statusEl.textContent = `Found ${clusters.length} patterns — no strong skill opportunities.`;
-    render(html`<p class="sk-empty">No repeating agent tasks detected.</p>`, customEl);
+    statusEl.textContent = t('skills.patternsNoStrong').replace('{0}', String(clusters.length));
+    render(html`<p class="sk-empty">${t('skills.noRepeatingTasks')}</p>`, customEl);
   } else {
-    statusEl.textContent = `${strong.length} skill ${strong.length === 1 ? 'opportunity' : 'opportunities'} found (from dashboard scan)`;
+    statusEl.textContent = t('skills.opportunitiesFound').replace('{0}', String(strong.length)) + ' ' + t('skills.fromDashboard');
     renderTriageResults(customEl, strong, clusters);
   }
 
@@ -129,7 +130,7 @@ function renderCachedResults(clusters: WorkflowCluster[], triaged: TriagedCluste
   if (catalogMatches.length > 0) {
     renderCatalogList(catalogEl, catalogMatches, catalogMatches.length);
   } else {
-    render(html`<p class="sk-empty">No community matches from dashboard scan. Click Analyze to re-run with full catalog.</p>`, catalogEl);
+    render(html`<p class="sk-empty">${t('skills.noCommunityMatches')}</p>`, catalogEl);
   }
 
   updateNavBadge('badge-skills', strong.length + catalogMatches.length);
@@ -150,10 +151,10 @@ async function runAnalysis(): Promise<void> {
   const lookback = Number.parseInt((document.getElementById('lookbackSelect') as HTMLSelectElement).value, 10);
 
   btn.disabled = true;
-  btn.textContent = 'Analyzing...';
+  btn.textContent = t('skills.analyzing');
   statusEl.textContent = '';
-  render(html`<p class="sk-loading">Scanning for repeated prompts...</p>`, customEl);
-  render(html`<p class="sk-loading">Loading community catalog...</p>`, catalogEl);
+  render(html`<p class="sk-loading">${t('skills.scanning')}</p>`, customEl);
+  render(html`<p class="sk-loading">${t('skills.loadingCatalog')}</p>`, catalogEl);
   dismissed.clear();
 
   // Build filter
@@ -172,14 +173,14 @@ async function runAnalysis(): Promise<void> {
     clusters = data.clusters || [];
 
     if (clusters.length === 0) {
-      render(html`<p class="sk-empty">No repeated patterns found. Try extending the lookback period or selecting a different workspace.</p>`, customEl);
-      render(html`<p class="sk-empty">No patterns to match against.</p>`, catalogEl);
+      render(html`<p class="sk-empty">${t('skills.noPatterns')}</p>`, customEl);
+      render(html`<p class="sk-empty">${t('skills.noPatternsToMatch')}</p>`, catalogEl);
       return;
     }
 
     // Send top 20 most repeated clusters with full examples to AI
     const top20 = clusters.slice(0, 20);
-    statusEl.textContent = `Found ${clusters.length} patterns \u2014 sending top ${top20.length} to AI triage...`;
+    statusEl.textContent = t('skills.patternsFound').replace('{0}', String(clusters.length)).replace('{1}', String(top20.length));
 
     const result = await rpc<SkillTriageResult>('triageSkills', {
       clusters: top20.map(c => ({
@@ -192,24 +193,24 @@ async function runAnalysis(): Promise<void> {
       workspace: workspaceName,
     } as Record<string, unknown>);
 
-    const strong = (result.triaged || []).filter(t => t.verdict === 'strong').slice(0, 10);
+    const strong = (result.triaged || []).filter(tr => tr.verdict === 'strong').slice(0, 10);
     lastTriaged = strong;
     lastClusters = clusters;
     lastResultsEl = customEl;
 
     if (strong.length === 0) {
-      statusEl.textContent = 'No strong skill opportunities found.';
-      render(html`<p class="sk-empty">No repeating agent tasks detected. Your prompts may already be well-served or too diverse.</p>`, customEl);
+      statusEl.textContent = t('skills.noStrongOpportunities');
+      render(html`<p class="sk-empty">${t('skills.noRepeatingTasksDetailed')}</p>`, customEl);
     } else {
-      statusEl.textContent = `${strong.length} skill ${strong.length === 1 ? 'opportunity' : 'opportunities'} found`;
+      statusEl.textContent = t('skills.opportunitiesFound').replace('{0}', String(strong.length));
       renderTriageResults(customEl, strong, clusters);
     }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Analysis failed';
-    render(html`<p class="sk-error">Error: ${msg}</p>`, customEl);
+    render(html`<p class="sk-error">${t('skills.error').replace('{0}', msg)}</p>`, customEl);
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Analyze';
+    btn.textContent = t('skills.analyze');
   }
 
   // Load community catalog after custom analysis and write to shared cache
@@ -225,31 +226,31 @@ function triggerRunAnalysis(): void {
 /* ── Triage Results (Custom Skills) ───────────────────────────────── */
 
 function renderTriageResults(container: HTMLElement, triaged: TriagedCluster[], clusters: WorkflowCluster[]): void {
-  const visible = triaged.filter(t => !dismissed.has(t.id));
+  const visible = triaged.filter(tr => !dismissed.has(tr.id));
   if (visible.length === 0) {
-    render(html`<p class="sk-empty">All suggestions dismissed. Run analysis again to refresh.</p>`, container);
+    render(html`<p class="sk-empty">${t('skills.allDismissed')}</p>`, container);
     return;
   }
-  render(html`<div class="sk-grid">${visible.map((t, i) => {
-    const cluster = clusters.find(c => c.id === t.id);
+  render(html`<div class="sk-grid">${visible.map((item, i) => {
+    const cluster = clusters.find(c => c.id === item.id);
     return html`
-      <div class="sk-card" data-idx="${i}" data-id="${t.id}">
+      <div class="sk-card" data-idx="${i}" data-id="${item.id}">
         <div class="sk-card-header">
           <span class="sk-rank">${i + 1}</span>
-          <div class="sk-card-title">${t.suggestedSkillName || t.label}</div>
-          <button class="sk-btn-dismiss" data-dismiss-id="${t.id}" title="Dismiss">\u00d7</button>
+          <div class="sk-card-title">${item.suggestedSkillName || item.label}</div>
+          <button class="sk-btn-dismiss" data-dismiss-id="${item.id}" title=${t('skills.dismiss')}>\u00d7</button>
         </div>
         <div class="sk-card-body">
-          <p class="sk-card-reason">${t.reason}</p>
+          <p class="sk-card-reason">${item.reason}</p>
           ${cluster ? html`
             <div class="sk-card-meta">
-              <span>${cluster.occurrences} repetitions</span>
-              <span>${cluster.sessions} sessions</span>
-              ${cluster.cancelRate > 0 ? html`<span>${cluster.cancelRate}% cancelled</span>` : null}
+              <span>${cluster.occurrences} ${t('skills.repetitions')}</span>
+              <span>${cluster.sessions} ${t('skills.sessions')}</span>
+              ${cluster.cancelRate > 0 ? html`<span>${cluster.cancelRate}% ${t('skills.cancelled')}</span>` : null}
             </div>
             ${cluster.examples.length > 0 ? html`<div class="sk-card-examples">${cluster.examples.slice(0, 3).map(ex => html`<div class="sk-card-example">${ex.length > 120 ? ex.slice(0, 117) + '...' : ex}</div>`)}</div>` : null}
             <div class="sk-card-actions">
-              <button class="sk-btn sk-btn-install" data-cluster-idx="${i}">Install Skill</button>
+              <button class="sk-btn sk-btn-install" data-cluster-idx="${i}">${t('skills.installSkill')}</button>
               <div class="sk-card-preview" data-cluster-idx="${i}"></div>
             </div>` : null}
         </div>
@@ -262,17 +263,17 @@ function renderTriageResults(container: HTMLElement, triaged: TriagedCluster[], 
       void (async () => {
         const el = e.currentTarget as HTMLButtonElement;
         const idx = Number.parseInt(el.dataset.clusterIdx || '0', 10);
-        const t = visible[idx];
-        if (!t) return;
-        const cluster = clusters.find(c => c.id === t.id);
+        const item = visible[idx];
+        if (!item) return;
+        const cluster = clusters.find(c => c.id === item.id);
         if (!cluster) return;
 
         el.disabled = true;
-        el.textContent = 'Generating...';
+        el.textContent = t('skills.generating');
 
         try {
           const res = await rpc<{ content: string; filename: string }>('generateSkillContent', {
-            label: t.suggestedSkillName || t.label,
+            label: item.suggestedSkillName || item.label,
             pattern: cluster.label,
             occurrences: cluster.occurrences,
             sessions: cluster.sessions,
@@ -284,11 +285,11 @@ function renderTriageResults(container: HTMLElement, triaged: TriagedCluster[], 
           if (previewEl) {
             render(html`
               <details class="sk-preview-details" open>
-                <summary>Preview: ${res.filename}</summary>
+                <summary>${t('skills.preview').replace('{0}', res.filename)}</summary>
                 <pre class="sk-preview-code">${res.content}</pre>
                 <div class="sk-preview-actions">
-                  <button class="sk-btn sk-btn-confirm">Save & Install</button>
-                  <button class="sk-btn sk-btn-secondary sk-btn-cancel">Cancel</button>
+                  <button class="sk-btn sk-btn-confirm">${t('skills.saveInstall')}</button>
+                  <button class="sk-btn sk-btn-secondary sk-btn-cancel">${t('skills.cancel')}</button>
                 </div>
               </details>`, previewEl);
 
@@ -296,9 +297,9 @@ function renderTriageResults(container: HTMLElement, triaged: TriagedCluster[], 
               void (async () => {
                 try {
                   await rpc<{ ok: boolean }>('installSkill', { filename: res.filename, content: res.content } as Record<string, unknown>);
-                  el.textContent = 'Installed';
+                  el.textContent = t('skills.installed');
                   el.classList.add('sk-btn-done');
-                  render(html`<span class="sk-installed-msg">Skill installed to ~/.agents/skills/</span>`, previewEl);
+                  render(html`<span class="sk-installed-msg">${t('skills.skillInstalled')}</span>`, previewEl);
                 } catch (err: unknown) {
                   const msg = err instanceof Error ? err.message : 'Install failed';
                   render(html`<span class="sk-error">${msg}</span>`, previewEl);
@@ -309,14 +310,14 @@ function renderTriageResults(container: HTMLElement, triaged: TriagedCluster[], 
             previewEl.querySelector<HTMLElement>('.sk-btn-cancel')?.addEventListener('click', () => {
               render(null, previewEl);
               el.disabled = false;
-              el.textContent = 'Install Skill';
+              el.textContent = t('skills.installSkill');
             });
           }
 
-          el.textContent = 'Review Below';
+          el.textContent = t('skills.reviewBelow');
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : 'Generation failed';
-          el.textContent = 'Install Skill';
+          el.textContent = t('skills.installSkill');
           el.disabled = false;
           const previewEl = el.parentElement?.querySelector<HTMLElement>('.sk-card-preview');
           if (previewEl) render(html`<span class="sk-error">${msg}</span>`, previewEl);
@@ -351,11 +352,11 @@ async function loadCatalog(container: HTMLElement, clusters: WorkflowCluster[], 
     // Fetch ALL catalog items (no pre-filtering)
     const result = await rpc<CatalogDiscoverResult>('discoverCatalog', {} as Record<string, unknown>);
     if (!result.items || result.items.length === 0) {
-      render(html`<p class="sk-empty">No items found in the community catalog.</p>`, container);
+      render(html`<p class="sk-empty">${t('skills.noCatalogItems')}</p>`, container);
       return [];
     }
 
-    render(html`<p class="sk-loading">AI is reviewing all ${result.items.length} catalog items against your patterns...</p>`, container);
+    render(html`<p class="sk-loading">${t('skills.aiReviewing').replace('{0}', String(result.items.length))}</p>`, container);
 
     const topClusters = clusters
       .sort((a, b) => b.occurrences - a.occurrences)
@@ -371,25 +372,25 @@ async function loadCatalog(container: HTMLElement, clusters: WorkflowCluster[], 
 
       const items = triaged.items && triaged.items.length > 0 ? triaged.items : [];
       if (items.length === 0) {
-        render(html`<p class="sk-empty">No community items matched your workflow patterns (${result.totalScanned} reviewed).</p>`, container);
+        render(html`<p class="sk-empty">${t('skills.noCommunityMatch').replace('{0}', String(result.totalScanned))}</p>`, container);
       } else {
         renderCatalogList(container, items, result.totalScanned);
       }
       return items;
     } catch {
-      render(html`<p class="sk-empty">AI triage failed. Try again later.</p>`, container);
+      render(html`<p class="sk-empty">${t('skills.aiTriageFailed')}</p>`, container);
       return [];
     }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Failed to load catalog';
-    render(html`<p class="sk-error">Catalog error: ${msg}</p>`, container);
+    render(html`<p class="sk-error">${t('skills.catalogError').replace('{0}', msg)}</p>`, container);
     return [];
   }
 }
 
 function renderCatalogList(container: HTMLElement, items: CatalogItem[], totalScanned: number): void {
   render(html`
-    <p class="sk-section-count">${items.length} curated from ${totalScanned} catalog items</p>
+    <p class="sk-section-count">${t('skills.curatedFrom').replace('{0}', String(items.length)).replace('{1}', String(totalScanned))}</p>
     <div class="sk-grid">${items.map(item => renderCatalogCard(item))}</div>
   `, container);
 
@@ -403,21 +404,21 @@ function renderCatalogList(container: HTMLElement, items: CatalogItem[], totalSc
         if (!path) return;
 
         el.disabled = true;
-        el.textContent = 'Fetching...';
+        el.textContent = t('skills.fetching');
 
         try {
           const res = await rpc<{ content: string; filename: string }>('installCatalogItem', {
             path, kind, title,
           } as Record<string, unknown>);
 
-          el.textContent = 'Installed';
+          el.textContent = t('skills.installed');
           el.classList.add('sk-btn-done');
           const parent = el.closest('.sk-card');
           const msgEl = parent?.querySelector<HTMLElement>('.sk-install-msg');
-          if (msgEl) msgEl.textContent = `Installed as ${res.filename}`;
+          if (msgEl) msgEl.textContent = t('skills.installedAs').replace('{0}', res.filename);
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : 'Install failed';
-          el.textContent = 'Install';
+          el.textContent = t('skills.install');
           el.disabled = false;
           const parent = el.closest('.sk-card');
           const msgEl = parent?.querySelector<HTMLElement>('.sk-install-msg');
@@ -428,10 +429,15 @@ function renderCatalogList(container: HTMLElement, items: CatalogItem[], totalSc
   }
 }
 
+const kindLabelKeys: Record<string, 'skills.kindSkill' | 'skills.kindAgent' | 'skills.kindInstruction' | 'skills.kindHook'> = {
+  skill: 'skills.kindSkill', agent: 'skills.kindAgent',
+  instruction: 'skills.kindInstruction', hook: 'skills.kindHook',
+};
+
 function renderCatalogCard(item: CatalogItem): ReturnType<typeof html> {
   const color = kindColors[item.kind] || COLORS.blue;
   const icon = kindIcons[item.kind] || '?';
-  const kindLabel = item.kind.charAt(0).toUpperCase() + item.kind.slice(1);
+  const kindLabel = kindLabelKeys[item.kind] ? t(kindLabelKeys[item.kind]) : item.kind.charAt(0).toUpperCase() + item.kind.slice(1);
   const ghUrl = `https://github.com/github/awesome-copilot/blob/main/${encodeURI(item.path)}`;
 
   return html`
@@ -455,7 +461,7 @@ function renderCatalogCard(item: CatalogItem): ReturnType<typeof html> {
             ${item.matchReasons.map(r => html`<span class="sk-reason">${r}</span>`)}
           </div>` : null}
         <div class="sk-card-actions">
-          <button class="sk-btn sk-btn-install-catalog" data-path="${item.path}" data-kind="${item.kind}" data-title="${item.title}">Install</button>
+          <button class="sk-btn sk-btn-install-catalog" data-path="${item.path}" data-kind="${item.kind}" data-title="${item.title}">${t('skills.install')}</button>
           <span class="sk-install-msg"></span>
         </div>
       </div>
