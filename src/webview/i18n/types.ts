@@ -21,7 +21,8 @@ export type TranslationKey =
   | PatternsKeys
   | ContextMgmtKeys
   | SkillsKeys
-  | GalleryKeys;
+  | GalleryKeys
+  | BurndownKeys;
 
 type CommonKeys =
   | 'common.score.excellent'
@@ -279,3 +280,40 @@ type GalleryKeys =
   | 'gallery.all'
   | 'gallery.screenshot'
   | 'gallery.unknown';
+
+type BurndownKeys =
+  | 'burndown.title'
+  | 'burndown.disabledTitle'
+  | 'burndown.disabledDesc'
+  | 'burndown.chartTab'
+  | 'burndown.budgetTab'
+  | 'burndown.prevMonth'
+  | 'burndown.nextMonth'
+  | 'burndown.allModels'
+  | 'burndown.approximationTitle'
+  | 'burndown.approximationDesc'
+  | 'burndown.daysToExhaustion'
+  | 'burndown.safeDailyBudget'
+  | 'burndown.projectedOverage'
+  | 'burndown.missing'
+  | 'burndown.finalizableTooltip'
+  | 'burndown.partialTooltip'
+  | 'burndown.pendingTooltip'
+  | 'burndown.noDataTooltip'
+  | 'burndown.loadingModels'
+  | 'burndown.totalBudget'
+  | 'burndown.tokens'
+  | 'burndown.modelsWithBudget'
+  | 'burndown.autoFill'
+  | 'burndown.clearAll'
+  | 'burndown.applyToBurndown'
+  | 'burndown.budgetHint'
+  | 'burndown.model'
+  | 'burndown.peakUsage'
+  | 'burndown.monthlyBudget'
+  | 'burndown.statusLabel'
+  | 'burndown.consumed'
+  | 'burndown.projected'
+  | 'burndown.lowerBound'
+  | 'burndown.pendingOnly'
+  | 'burndown.noNativeData';
