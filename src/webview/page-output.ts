@@ -9,6 +9,7 @@ import { DateFilter } from '../core/types';
 import { TOKEN_DATA_AVAILABLE_FROM, FF_TOKEN_REPORTING_ENABLED } from '../core/constants';
 import { isoWeek } from '../core/helpers';
 import { rpc, createChart, formatNum, $$, PALETTE, COLORS, HARNESS_COLORS } from './shared';
+import { t } from './i18n/index';
 import { html, render, StatCard, CanvasEl, ComponentChildren } from './render';
 
 type AggLevel = 'daily' | 'weekly' | 'monthly';
@@ -231,11 +232,11 @@ export async function renderOutput(container: HTMLElement, currentFilter: DateFi
   }
 
   render(html`
-    <h1>Output</h1>
+    <h1>${t('output.title')}</h1>
     <div class="cons-range-bar" id="outputRange"></div>
     <div class="tab-bar" id="output-tabs">
-      <button class=${`tab${activeTab === 'production' ? ' active' : ''}`} data-tab="production">Code Output</button>
-      ${FF_TOKEN_REPORTING_ENABLED ? html`<button class=${`tab${activeTab === 'token-usage' ? ' active' : ''}`} data-tab="token-usage">Token Usage</button>` : ''}
+      <button class=${`tab${activeTab === 'production' ? ' active' : ''}`} data-tab="production">${t('output.codeOutput')}</button>
+      ${FF_TOKEN_REPORTING_ENABLED ? html`<button class=${`tab${activeTab === 'token-usage' ? ' active' : ''}`} data-tab="token-usage">${t('output.tokenUsage')}</button>` : ''}
     </div>
     <div id="output-tab-content"></div>
   `, container);

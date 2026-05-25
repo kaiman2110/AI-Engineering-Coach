@@ -14,7 +14,11 @@ export type TranslationKey =
   | LoadingKeys
   | ErrorKeys
   | NavKeys
-  | DashboardKeys;
+  | DashboardKeys
+  | AntiPatternsKeys
+  | OutputKeys
+  | TimelineKeys
+  | PatternsKeys;
 
 type CommonKeys =
   | 'common.score.excellent'
@@ -112,3 +116,45 @@ type DashboardKeys =
   | 'dashboard.finding'
   | 'dashboard.repetitions'
   | 'dashboard.loc';
+
+type AntiPatternsKeys =
+  | 'antipatterns.title'
+  | 'antipatterns.rulesTab'
+  | 'antipatterns.noIssues'
+  | 'antipatterns.allChecksPassing'
+  | 'antipatterns.problem'
+  | 'antipatterns.action'
+  | 'antipatterns.high'
+  | 'antipatterns.medium'
+  | 'antipatterns.low';
+
+type OutputKeys =
+  | 'output.title'
+  | 'output.codeOutput'
+  | 'output.tokenUsage'
+  | 'output.byLanguage'
+  | 'output.byWorkspace'
+  | 'output.byHarness'
+  | 'output.dailyProduction'
+  | 'output.aiGeneratedLoc';
+
+type TimelineKeys =
+  | 'timeline.title'
+  | 'timeline.searchSessions'
+  | 'timeline.selectSession'
+  | 'timeline.noSessions'
+  | 'timeline.sessionNotFound'
+  | 'timeline.prev'
+  | 'timeline.next';
+
+type PatternsKeys =
+  | 'patterns.title'
+  | 'patterns.workHours'
+  | 'patterns.calendar'
+  | 'patterns.projects'
+  | 'patterns.hourlyActivity'
+  | 'patterns.weeklyTrend'
+  | 'patterns.noActivityData'
+  | 'patterns.noProjectData'
+  | 'patterns.weekday'
+  | 'patterns.weekend';
