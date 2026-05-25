@@ -20,7 +20,8 @@ export type TranslationKey =
   | TimelineKeys
   | PatternsKeys
   | ContextMgmtKeys
-  | SkillsKeys;
+  | SkillsKeys
+  | GalleryKeys;
 
 type CommonKeys =
   | 'common.score.excellent'
@@ -262,3 +263,19 @@ type SkillsKeys =
   | 'skills.kindAgent'
   | 'skills.kindInstruction'
   | 'skills.kindHook';
+
+type GalleryKeys =
+  | 'gallery.findingMoments'
+  | 'gallery.noMomentsTitle'
+  | 'gallery.noMomentsDesc'
+  | 'gallery.loadingScreenshots'
+  | 'gallery.noLoadableTitle'
+  | 'gallery.noLoadableDesc'
+  | 'gallery.preparingScreenshots'
+  | 'gallery.checkedProgress'
+  | 'gallery.title'
+  | 'gallery.subtitle'
+  | 'gallery.storyTooltip'
+  | 'gallery.all'
+  | 'gallery.screenshot'
+  | 'gallery.unknown';
